@@ -25,6 +25,8 @@ contract Vesting is Initializable {
     uint256 public durationInSeconds;
     uint256 public startTimestamp;
     uint256 public released;
+    address public governance;
+    address public pendingGovernance;
 
     /**
      * @dev Initializes a vesting contract that vests its balance of any ERC20 token to the
@@ -39,16 +41,25 @@ contract Vesting is Initializable {
         address _token,
         address _beneficiary,
         uint256 _cliffInSeconds,
-        uint256 _durationInSeconds
+        uint256 _durationInSeconds,
+        address _governance
     ) public initializer {
+        require(governance == address(0));
         require(_beneficiary != address(0), "Beneficiary cannot be empty");
+        require(_governance != address(0), "governance cannot be empty");
         require(_cliffInSeconds <= _durationInSeconds, "Cliff is greater than duration");
 
         token = IERC20(_token);
         beneficiary = _beneficiary;
         durationInSeconds = _durationInSeconds;
         cliffInSeconds = _cliffInSeconds;
-        startTimestamp = blockTimestamp();
+        startTimestamp = block.timestamp;
+        governance = _governance;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "only governance can perform this action");
+        _;
     }
 
     /**
@@ -68,11 +79,12 @@ contract Vesting is Initializable {
      * @dev Calculates the amount that has already vested but hasn't been released yet.
      */
     function vestedAmount() public view returns (uint256) {
-        if (blockTimestamp() < startTimestamp) {
+        uint256 blockTimestamp = block.timestamp;
+        if (blockTimestamp < startTimestamp) {
             return 0;
         }
 
-        uint256 elapsedTime = blockTimestamp() - startTimestamp;
+        uint256 elapsedTime = blockTimestamp - startTimestamp;
 
         if (elapsedTime < cliffInSeconds) {
             return 0;
@@ -93,7 +105,18 @@ contract Vesting is Initializable {
         }
     }
 
-    function blockTimestamp() public view virtual returns (uint256) {
-        return block.timestamp;
+    function changeBeneficiary(address newBeneficiary) public onlyGovernance {
+        beneficiary = newBeneficiary;
+    }
+
+    function changeGovernance(address newGovernance) public onlyGovernance {
+        require(newGovernance != address(0), "governance cannot be empty");
+        pendingGovernance = newGovernance;
+    }
+
+    function acceptGovernance() public {
+        require(msg.sender == pendingGovernance, "only pendingGovernance can accept this role");
+        pendingGovernance = address(0);
+        governance = msg.sender;
     }
 }

@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20VotesComp.sol";
 import "./Vesting.sol";
 
-contract SADL is ERC20VotesComp, Pausable {
+contract SADL is ERC20Permit, Pausable {
     using SafeERC20 for IERC20;
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
@@ -22,33 +22,43 @@ contract SADL is ERC20VotesComp, Pausable {
     event Disallowed(address target);
 
     struct Recipient {
-        bool shouldVest;
         address to;
         uint256 amount;
+        uint128 cliffPeriod;
+        uint128 durationPeriod;
     }
 
+    /**
+     * @dev Initializes SADL token with specified governance address and recipients. For vesting
+     * durations and amounts, please refer to our documentation on token distribution schedule.
+     * @param _governance address of the governance who will own this contract
+     * @param _pausePeriod time in seconds until since deployment this token can be unpaused by the governance
+     * @param _recipients recipients of the token at deployment. Addresses that are subject to vesting are vested according
+     * to the token distribution schedule.
+     * @param _vestingContractTarget logic contract of Vesting.sol to use for cloning
+     */
     constructor(
-        string memory _name,
-        string memory _symbol,
         address _governance,
         uint256 _pausePeriod,
         Recipient[] memory _recipients,
         address _vestingContractTarget
-    ) ERC20(_name, _symbol) ERC20Permit(_name) public {
+    ) ERC20("Saddle", "SADL") ERC20Permit("Saddle") public {
         governance = _governance;
         allowedTransferee[_governance] = true;
 
         for (uint256 i = 0; i < _recipients.length; i++) {
             address to = _recipients[i].to;
             uint256 amount = _recipients[i].amount;
-            if (_recipients[i].shouldVest) {
+            if (_recipients[i].cliffPeriod > 0 || _recipients[i].durationPeriod > 0) {
+                // If the recipients require vesting, deploy a clone of Vesting.sol
                 Vesting vestingContract = Vesting(Clones.clone(_vestingContractTarget));
                 _mint(address(vestingContract), amount);
                 vestingContract.initialize(
                     address(this),
                     to,
-                    52 weeks,
-                    2 * 52 weeks
+                    _recipients[i].cliffPeriod,
+                    _recipients[i].durationPeriod,
+                    _governance
                 );
                 allowedTransferee[address(vestingContract)] = true;
             } else {
@@ -57,8 +67,10 @@ contract SADL is ERC20VotesComp, Pausable {
             }
         }
 
-        canUnpauseAfter = blockTimestamp() + _pausePeriod;
+        canUnpauseAfter = block.timestamp + _pausePeriod;
         _pause();
+
+        // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SADL: incorrect distribution");
     }
 
@@ -79,7 +91,7 @@ contract SADL is ERC20VotesComp, Pausable {
     }
 
     function changeTransferability(bool decision) public onlyGovernance {
-        require(blockTimestamp() > canUnpauseAfter, "SADL: cannot change transferability yet");
+        require(block.timestamp > canUnpauseAfter, "SADL: cannot change transferability yet");
         if (decision) {
             _unpause();
         } else {
@@ -131,14 +143,5 @@ contract SADL is ERC20VotesComp, Pausable {
             require(balance > 0, "SADL: trying to send 0 balance");
             _token.safeTransfer(_to, balance);
         }
-    }
-
-
-    function _maxSupply() internal view override returns (uint224) {
-        return SafeCast.toUint224(MAX_SUPPLY);
-    }
-
-    function blockTimestamp() public view virtual returns (uint256) {
-        return block.timestamp;
     }
 }
