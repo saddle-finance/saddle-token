@@ -101,7 +101,10 @@ export async function forceAdvanceOneBlock(timestamp?: number): Promise<any> {
   return ethers.provider.send("evm_mine", params)
 }
 
-export async function setTimestamp(timestamp: number): Promise<any> {
+export async function setTimestamp(timestamp: number | BigNumber): Promise<any> {
+  if (timestamp instanceof BigNumber) {
+    timestamp = timestamp.toNumber()
+  }
   return forceAdvanceOneBlock(timestamp)
 }
 

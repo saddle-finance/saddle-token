@@ -20,6 +20,7 @@ contract SADL is ERC20Permit, Pausable {
 
     event Allowed(address target);
     event Disallowed(address target);
+    event SetGovernance(address governance);
 
     struct Recipient {
         address to;
@@ -61,9 +62,11 @@ contract SADL is ERC20Permit, Pausable {
                     _governance
                 );
                 allowedTransferee[address(vestingContract)] = true;
+                emit Allowed(address(vestingContract));
             } else {
                 _mint(to, amount);
                 allowedTransferee[to] = true;
+                emit Allowed(to);
             }
         }
 
@@ -72,6 +75,7 @@ contract SADL is ERC20Permit, Pausable {
 
         // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SADL: incorrect distribution");
+        emit SetGovernance(_governance);
     }
 
     modifier onlyGovernance() {
@@ -88,6 +92,7 @@ contract SADL is ERC20Permit, Pausable {
         require(msg.sender == pendingGovernance, "SADL: only pendingGovernance can accept this role");
         pendingGovernance = address(0);
         governance = msg.sender;
+        emit SetGovernance(msg.sender);
     }
 
     function changeTransferability(bool decision) public onlyGovernance {

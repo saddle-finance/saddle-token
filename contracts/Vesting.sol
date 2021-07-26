@@ -16,6 +16,9 @@ contract Vesting is Initializable {
     using SafeERC20 for IERC20;
 
     event Released(uint256 amount);
+    event Initialized(address beneficiary, address governance, uint128 cliff, uint128 duration);
+    event SetBeneficiary(address beneficiary);
+    event SetGovernance(address governance);
 
     // beneficiary of tokens after they are released
     address public beneficiary;
@@ -29,6 +32,14 @@ contract Vesting is Initializable {
     address public pendingGovernance;
 
     /**
+     * @dev Sets the governance to msg.sender on deploying this contract. This prevents others from
+     * initializing the logic contract.
+     */
+    constructor() public {
+        governance = msg.sender;
+    }
+
+    /**
      * @dev Initializes a vesting contract that vests its balance of any ERC20 token to the
      * _beneficiary, monthly in a linear fashion until duration has passed. By then all
      * of the balance will have vested.
@@ -40,14 +51,14 @@ contract Vesting is Initializable {
     function initialize(
         address _token,
         address _beneficiary,
-        uint256 _cliffInSeconds,
-        uint256 _durationInSeconds,
+        uint128 _cliffInSeconds,
+        uint128 _durationInSeconds,
         address _governance
     ) public initializer {
-        require(governance == address(0));
-        require(_beneficiary != address(0), "Beneficiary cannot be empty");
+        require(governance == address(0), "cannot initialize logic contract");
+        require(_beneficiary != address(0), "beneficiary cannot be empty");
         require(_governance != address(0), "governance cannot be empty");
-        require(_cliffInSeconds <= _durationInSeconds, "Cliff is greater than duration");
+        require(_cliffInSeconds <= _durationInSeconds, "cliff is greater than duration");
 
         token = IERC20(_token);
         beneficiary = _beneficiary;
@@ -55,6 +66,8 @@ contract Vesting is Initializable {
         cliffInSeconds = _cliffInSeconds;
         startTimestamp = block.timestamp;
         governance = _governance;
+
+        emit Initialized(_beneficiary, _governance, _cliffInSeconds, _durationInSeconds);
     }
 
     modifier onlyGovernance() {
@@ -107,6 +120,7 @@ contract Vesting is Initializable {
 
     function changeBeneficiary(address newBeneficiary) public onlyGovernance {
         beneficiary = newBeneficiary;
+        emit SetBeneficiary(newBeneficiary);
     }
 
     function changeGovernance(address newGovernance) public onlyGovernance {
@@ -118,5 +132,6 @@ contract Vesting is Initializable {
         require(msg.sender == pendingGovernance, "only pendingGovernance can accept this role");
         pendingGovernance = address(0);
         governance = msg.sender;
+        emit SetGovernance(msg.sender);
     }
 }
