@@ -1,17 +1,17 @@
 import {
   ZERO_ADDRESS,
-  getDeployedContractByName, setNextTimestamp, getCurrentBlockTimestamp, setTimestamp, increaseTimestamp
+  getDeployedContractByName,
+  setTimestamp,
 } from "./testUtils"
 import { solidity } from "ethereum-waffle"
 import { deployments } from "hardhat"
 
 import { Vesting, GenericERC20, Cloner } from "../build/typechain/"
-import {BigNumber, Signer} from "ethers"
+import { BigNumber, Signer } from "ethers"
 import chai from "chai"
 
 chai.use(solidity)
 const { expect } = chai
-
 
 describe("Vesting", () => {
   let signers: Array<Signer>
@@ -41,25 +41,40 @@ describe("Vesting", () => {
       governanceAddress = await governance.getAddress()
       malActor = signers[10]
 
-      vesting = await getDeployedContractByName(deployments, "Vesting") as Vesting
+      vesting = (await getDeployedContractByName(
+        deployments,
+        "Vesting",
+      )) as Vesting
 
       await deploy("DummyToken", {
         contract: "GenericERC20",
         args: ["DummyToken", "TOKEN", 18],
         log: true,
         skipIfAlreadyDeployed: true,
-        from: deployerAddress
+        from: deployerAddress,
       })
 
-      dummyToken = await getDeployedContractByName(deployments, "DummyToken") as GenericERC20
-      await dummyToken.mint(deployerAddress, BigNumber.from(10).pow(18).mul(10000))
+      dummyToken = (await getDeployedContractByName(
+        deployments,
+        "DummyToken",
+      )) as GenericERC20
+      await dummyToken.mint(
+        deployerAddress,
+        BigNumber.from(10).pow(18).mul(10000),
+      )
 
-      cloner = await getDeployedContractByName(deployments, "Cloner") as Cloner
+      cloner = (await getDeployedContractByName(
+        deployments,
+        "Cloner",
+      )) as Cloner
 
-      let cloneAddress = await cloner.callStatic.clone(vesting.address)
+      const cloneAddress = await cloner.callStatic.clone(vesting.address)
       await cloner.clone(vesting.address)
 
-      vestingClone = await ethers.getContractAt("Vesting", cloneAddress) as Vesting
+      vestingClone = (await ethers.getContractAt(
+        "Vesting",
+        cloneAddress,
+      )) as Vesting
     },
   )
 
@@ -69,23 +84,61 @@ describe("Vesting", () => {
 
   describe("initialize", () => {
     it("Fails to initialize the logic contract", async () => {
-      await expect(vesting.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200, governanceAddress)).to.be.revertedWith("cannot initialize logic contract")
+      await expect(
+        vesting.initialize(
+          dummyToken.address,
+          beneficiaryAddress,
+          3600,
+          7200,
+          governanceAddress,
+        ),
+      ).to.be.revertedWith("cannot initialize logic contract")
     })
 
     it("Fails to initialize a clone with empty beneficiary", async () => {
-      await expect(vestingClone.initialize(dummyToken.address, ZERO_ADDRESS, 3600, 7200, governanceAddress)).to.be.revertedWith("beneficiary cannot be empty")
+      await expect(
+        vestingClone.initialize(
+          dummyToken.address,
+          ZERO_ADDRESS,
+          3600,
+          7200,
+          governanceAddress,
+        ),
+      ).to.be.revertedWith("beneficiary cannot be empty")
     })
 
     it("Fails to initialize a clone with empty governance", async () => {
-      await expect(vestingClone.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200, ZERO_ADDRESS)).to.be.revertedWith("governance cannot be empty")
+      await expect(
+        vestingClone.initialize(
+          dummyToken.address,
+          beneficiaryAddress,
+          3600,
+          7200,
+          ZERO_ADDRESS,
+        ),
+      ).to.be.revertedWith("governance cannot be empty")
     })
 
     it("Fails to initialize a clone with longer cliff than duration", async () => {
-      await expect(vestingClone.initialize(dummyToken.address, beneficiaryAddress, 7201, 7200, governanceAddress)).to.be.revertedWith("cliff is greater than duration")
+      await expect(
+        vestingClone.initialize(
+          dummyToken.address,
+          beneficiaryAddress,
+          7201,
+          7200,
+          governanceAddress,
+        ),
+      ).to.be.revertedWith("cliff is greater than duration")
     })
 
     it("Successfully initializes a clone", async () => {
-      await vestingClone.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200, governanceAddress)
+      await vestingClone.initialize(
+        dummyToken.address,
+        beneficiaryAddress,
+        3600,
+        7200,
+        governanceAddress,
+      )
       expect(await vestingClone.beneficiary()).to.eq(beneficiaryAddress)
       expect(await vestingClone.governance()).to.eq(governanceAddress)
     })
@@ -95,7 +148,13 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
-      await vestingClone.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200, governanceAddress)
+      await vestingClone.initialize(
+        dummyToken.address,
+        beneficiaryAddress,
+        3600,
+        7200,
+        governanceAddress,
+      )
       await dummyToken.transfer(vestingClone.address, totalVestedAmount)
     })
 
@@ -111,7 +170,9 @@ describe("Vesting", () => {
       await setTimestamp(startTimestamp.add(3600))
       expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount.div(2))
       await setTimestamp(startTimestamp.add(5400))
-      expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount.mul(3).div(4))
+      expect(await vestingClone.vestedAmount()).to.eq(
+        totalVestedAmount.mul(3).div(4),
+      )
 
       // After Duration is over
       await setTimestamp(startTimestamp.add(7200))
@@ -123,12 +184,20 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
-      await vestingClone.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200, governanceAddress)
+      await vestingClone.initialize(
+        dummyToken.address,
+        beneficiaryAddress,
+        3600,
+        7200,
+        governanceAddress,
+      )
       await dummyToken.transfer(vestingClone.address, totalVestedAmount)
     })
 
     it("Fails when there are no tokens to claim", async () => {
-      await expect(vestingClone.connect(beneficiary).release()).to.be.revertedWith("No tokens to release")
+      await expect(
+        vestingClone.connect(beneficiary).release(),
+      ).to.be.revertedWith("No tokens to release")
     })
 
     it("Successfully releases the vested amounts", async () => {
@@ -138,16 +207,95 @@ describe("Vesting", () => {
       await setTimestamp(startTimestamp.add(3600))
       expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount.div(2))
       await vestingClone.connect(beneficiary).release()
-      expect(await dummyToken.balanceOf(beneficiaryAddress)).gte(totalVestedAmount.div(2)).and.lte("5001388888888888888888")
+      expect(await dummyToken.balanceOf(beneficiaryAddress))
+        .gte(totalVestedAmount.div(2))
+        .and.lte("5001388888888888888888")
 
       await setTimestamp(startTimestamp.add(5400))
       await vestingClone.connect(beneficiary).release()
-      expect(await dummyToken.balanceOf(beneficiaryAddress)).gte(totalVestedAmount.mul(3).div(4)).and.lte("7501388888888888888888")
+      expect(await dummyToken.balanceOf(beneficiaryAddress))
+        .gte(totalVestedAmount.mul(3).div(4))
+        .and.lte("7501388888888888888888")
 
       // After Duration is over
       await setTimestamp(startTimestamp.add(7200))
       await vestingClone.connect(beneficiary).release()
-      expect(await dummyToken.balanceOf(beneficiaryAddress)).eq(totalVestedAmount)
+      expect(await dummyToken.balanceOf(beneficiaryAddress)).eq(
+        totalVestedAmount,
+      )
+    })
+  })
+
+  describe("changeBeneficiary", () => {
+    const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
+
+    beforeEach(async () => {
+      await vestingClone.initialize(
+        dummyToken.address,
+        beneficiaryAddress,
+        3600,
+        7200,
+        governanceAddress,
+      )
+      await dummyToken.transfer(vestingClone.address, totalVestedAmount)
+    })
+
+    it("Fails when called by other than the governance", async () => {
+      await expect(
+        vestingClone
+          .connect(malActor)
+          .changeBeneficiary(await malActor.getAddress()),
+      ).to.be.revertedWith("only governance can perform this action")
+    })
+
+    it("Successfully changes beneficiary", async () => {
+      await vestingClone.connect(governance).changeBeneficiary(deployerAddress)
+      expect(await vestingClone.beneficiary()).to.be.eq(deployerAddress)
+    })
+  })
+
+  describe("changeGovernance", () => {
+    const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
+
+    beforeEach(async () => {
+      await vestingClone.initialize(
+        dummyToken.address,
+        beneficiaryAddress,
+        3600,
+        7200,
+        governanceAddress,
+      )
+      await dummyToken.transfer(vestingClone.address, totalVestedAmount)
+    })
+
+    it("Fails when called by other than the governance", async () => {
+      await expect(
+        vestingClone
+          .connect(malActor)
+          .changeGovernance(await malActor.getAddress()),
+      ).to.be.revertedWith("only governance can perform this action")
+    })
+
+    it("Successfully changes governance", async () => {
+      await vestingClone.connect(governance).changeGovernance(deployerAddress)
+      expect(await vestingClone.governance()).to.be.eq(governanceAddress)
+      await vestingClone.connect(deployer).acceptGovernance()
+      expect(await vestingClone.governance()).to.be.eq(deployerAddress)
+      expect(await vestingClone.pendingGovernance()).to.be.eq(ZERO_ADDRESS)
+    })
+
+    it("Fails to accept governance when changeGovernance is not called before", async () => {
+      await expect(
+        vestingClone.connect(deployer).acceptGovernance(),
+      ).to.be.revertedWith("only pendingGovernance can accept this role")
+    })
+
+    it("Fails to accept governance when called by other than pendingGovernance", async () => {
+      await vestingClone.connect(governance).changeGovernance(deployerAddress)
+      expect(await vestingClone.pendingGovernance()).to.be.eq(deployerAddress)
+      await expect(
+        vestingClone.connect(malActor).acceptGovernance(),
+      ).to.be.revertedWith("only pendingGovernance can accept this role")
     })
   })
 })

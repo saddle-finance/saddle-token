@@ -16,7 +16,12 @@ contract Vesting is Initializable {
     using SafeERC20 for IERC20;
 
     event Released(uint256 amount);
-    event Initialized(address beneficiary, address governance, uint128 cliff, uint128 duration);
+    event Initialized(
+        address beneficiary,
+        address governance,
+        uint128 cliff,
+        uint128 duration
+    );
     event SetBeneficiary(address beneficiary);
     event SetGovernance(address governance);
 
@@ -58,7 +63,10 @@ contract Vesting is Initializable {
         require(governance == address(0), "cannot initialize logic contract");
         require(_beneficiary != address(0), "beneficiary cannot be empty");
         require(_governance != address(0), "governance cannot be empty");
-        require(_cliffInSeconds <= _durationInSeconds, "cliff is greater than duration");
+        require(
+            _cliffInSeconds <= _durationInSeconds,
+            "cliff is greater than duration"
+        );
 
         token = IERC20(_token);
         beneficiary = _beneficiary;
@@ -67,11 +75,19 @@ contract Vesting is Initializable {
         startTimestamp = block.timestamp;
         governance = _governance;
 
-        emit Initialized(_beneficiary, _governance, _cliffInSeconds, _durationInSeconds);
+        emit Initialized(
+            _beneficiary,
+            _governance,
+            _cliffInSeconds,
+            _durationInSeconds
+        );
     }
 
     modifier onlyGovernance() {
-        require(msg.sender == governance, "only governance can perform this action");
+        require(
+            msg.sender == governance,
+            "only governance can perform this action"
+        );
         _;
     }
 
@@ -110,7 +126,7 @@ contract Vesting is Initializable {
             uint256 currentBalance = token.balanceOf(address(this));
             uint256 totalBalance = currentBalance + released;
 
-            uint256 vested = totalBalance * elapsedTime / durationInSeconds;
+            uint256 vested = (totalBalance * elapsedTime) / durationInSeconds;
             uint256 unreleased = vested - released;
 
             // currentBalance can be 0 in case of vesting being revoked earlier.
@@ -129,7 +145,10 @@ contract Vesting is Initializable {
     }
 
     function acceptGovernance() public {
-        require(msg.sender == pendingGovernance, "only pendingGovernance can accept this role");
+        require(
+            msg.sender == pendingGovernance,
+            "only pendingGovernance can accept this role"
+        );
         pendingGovernance = address(0);
         governance = msg.sender;
         emit SetGovernance(msg.sender);

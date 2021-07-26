@@ -43,16 +43,21 @@ contract SADL is ERC20Permit, Pausable {
         uint256 _pausePeriod,
         Recipient[] memory _recipients,
         address _vestingContractTarget
-    ) ERC20("Saddle", "SADL") ERC20Permit("Saddle") public {
+    ) public ERC20("Saddle", "SADL") ERC20Permit("Saddle") {
         governance = _governance;
         allowedTransferee[_governance] = true;
 
         for (uint256 i = 0; i < _recipients.length; i++) {
             address to = _recipients[i].to;
             uint256 amount = _recipients[i].amount;
-            if (_recipients[i].cliffPeriod > 0 || _recipients[i].durationPeriod > 0) {
+            if (
+                _recipients[i].cliffPeriod > 0 ||
+                _recipients[i].durationPeriod > 0
+            ) {
                 // If the recipients require vesting, deploy a clone of Vesting.sol
-                Vesting vestingContract = Vesting(Clones.clone(_vestingContractTarget));
+                Vesting vestingContract = Vesting(
+                    Clones.clone(_vestingContractTarget)
+                );
                 _mint(address(vestingContract), amount);
                 vestingContract.initialize(
                     address(this),
@@ -79,24 +84,36 @@ contract SADL is ERC20Permit, Pausable {
     }
 
     modifier onlyGovernance() {
-        require(_msgSender() == governance, "SADL: only governance can perform this action");
+        require(
+            _msgSender() == governance,
+            "SADL: only governance can perform this action"
+        );
         _;
     }
 
     function changeGovernance(address newGovernance) public onlyGovernance {
-        require(newGovernance != address(0), "SADL: governance cannot be empty");
+        require(
+            newGovernance != address(0),
+            "SADL: governance cannot be empty"
+        );
         pendingGovernance = newGovernance;
     }
 
     function acceptGovernance() public {
-        require(msg.sender == pendingGovernance, "SADL: only pendingGovernance can accept this role");
+        require(
+            msg.sender == pendingGovernance,
+            "SADL: only pendingGovernance can accept this role"
+        );
         pendingGovernance = address(0);
         governance = msg.sender;
         emit SetGovernance(msg.sender);
     }
 
     function changeTransferability(bool decision) public onlyGovernance {
-        require(block.timestamp > canUnpauseAfter, "SADL: cannot change transferability yet");
+        require(
+            block.timestamp > canUnpauseAfter,
+            "SADL: cannot change transferability yet"
+        );
         if (decision) {
             _unpause();
         } else {
@@ -111,7 +128,10 @@ contract SADL is ERC20Permit, Pausable {
         }
     }
 
-    function removeFromAllowedList(address[] memory target) public onlyGovernance {
+    function removeFromAllowedList(address[] memory target)
+        public
+        onlyGovernance
+    {
         for (uint256 i = 0; i < target.length; i++) {
             allowedTransferee[target[i]] = false;
             emit Disallowed(target[i]);
@@ -124,7 +144,10 @@ contract SADL is ERC20Permit, Pausable {
         uint256 amount
     ) internal override {
         super._beforeTokenTransfer(from, to, amount);
-        require(!paused() || allowedTransferee[from] || allowedTransferee[to], "SADL: paused");
+        require(
+            !paused() || allowedTransferee[from] || allowedTransferee[to],
+            "SADL: paused"
+        );
         require(to != address(this), "SADL: invalid recipient");
     }
 
@@ -139,12 +162,16 @@ contract SADL is ERC20Permit, Pausable {
         if (_token == IERC20(address(0))) {
             // for Ether
             uint256 totalBalance = address(this).balance;
-            uint256 balance = _balance == 0 ? totalBalance : Math.min(totalBalance, _balance);
+            uint256 balance = _balance == 0
+                ? totalBalance
+                : Math.min(totalBalance, _balance);
             _to.transfer(balance);
         } else {
             // any other erc20
             uint256 totalBalance = _token.balanceOf(address(this));
-            uint256 balance = _balance == 0 ? totalBalance : Math.min(totalBalance, _balance);
+            uint256 balance = _balance == 0
+                ? totalBalance
+                : Math.min(totalBalance, _balance);
             require(balance > 0, "SADL: trying to send 0 balance");
             _token.safeTransfer(_to, balance);
         }

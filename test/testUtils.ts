@@ -2,7 +2,6 @@ import { BigNumber, Bytes, ContractFactory, Signer, providers } from "ethers"
 import { ethers, network } from "hardhat"
 
 import { Artifact } from "hardhat/types"
-import { BytesLike } from "@ethersproject/bytes"
 import { Contract } from "@ethersproject/contracts"
 import { ERC20 } from "../build/typechain"
 import { DeploymentsExtension } from "hardhat-deploy/dist/types"
@@ -64,7 +63,6 @@ export async function deployContractWithLibraries(
   }
 }
 
-
 // Contract calls
 
 export async function getUserTokenBalances(
@@ -101,7 +99,9 @@ export async function forceAdvanceOneBlock(timestamp?: number): Promise<any> {
   return ethers.provider.send("evm_mine", params)
 }
 
-export async function setTimestamp(timestamp: number | BigNumber): Promise<any> {
+export async function setTimestamp(
+  timestamp: number | BigNumber,
+): Promise<any> {
   if (timestamp instanceof BigNumber) {
     timestamp = timestamp.toNumber()
   }

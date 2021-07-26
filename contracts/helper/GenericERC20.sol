@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @notice This contract simulates a generic ERC20 token that is mintable and burnable.
  */
 contract GenericERC20 is ERC20, Ownable {
-
     uint8 private _decimals;
 
     /**

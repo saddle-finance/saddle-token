@@ -1,20 +1,15 @@
-import {
-  ZERO_ADDRESS,
-  asyncForEach, getDeployedContractByName
-} from "./testUtils"
+import { getDeployedContractByName } from "./testUtils"
 import { solidity } from "ethereum-waffle"
 import { deployments } from "hardhat"
 
 import { Vesting } from "../build/typechain/"
 import { Signer } from "ethers"
 import chai from "chai"
-import { formatBytes32String } from "ethers/lib/utils"
 
 chai.use(solidity)
 const { expect } = chai
 
-
-describe("Vesting", () => {
+describe("Token", () => {
   let signers: Array<Signer>
   let deployer: Signer
   let deployerAddress: string
@@ -32,9 +27,12 @@ describe("Vesting", () => {
       malActor = signers[10]
 
       await deploy("Vesting", {
-        from: deployerAddress
+        from: deployerAddress,
       })
-      vesting = await getDeployedContractByName(deployments, "Vesting") as Vesting
+      vesting = (await getDeployedContractByName(
+        deployments,
+        "Vesting",
+      )) as Vesting
     },
   )
 
@@ -44,6 +42,7 @@ describe("Vesting", () => {
 
   describe("initialize", () => {
     it("Successfully initializes vesting contract", async () => {
+      console.log("Initialize")
     })
   })
 })
