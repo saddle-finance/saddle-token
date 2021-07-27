@@ -16,11 +16,11 @@ contract Vesting is Initializable {
     using SafeERC20 for IERC20;
 
     event Released(uint256 amount);
-    event Initialized(
+    event VestingInitialized(
         address beneficiary,
         address governance,
-        uint128 cliff,
-        uint128 duration
+        uint256 cliff,
+        uint256 duration
     );
     event SetBeneficiary(address beneficiary);
     event SetGovernance(address governance);
@@ -56,10 +56,10 @@ contract Vesting is Initializable {
     function initialize(
         address _token,
         address _beneficiary,
-        uint128 _cliffInSeconds,
-        uint128 _durationInSeconds,
+        uint256 _cliffInSeconds,
+        uint256 _durationInSeconds,
         address _governance
-    ) public initializer {
+    ) external initializer {
         require(governance == address(0), "cannot initialize logic contract");
         require(_beneficiary != address(0), "beneficiary cannot be empty");
         require(_governance != address(0), "governance cannot be empty");
@@ -75,7 +75,7 @@ contract Vesting is Initializable {
         startTimestamp = block.timestamp;
         governance = _governance;
 
-        emit Initialized(
+        emit VestingInitialized(
             _beneficiary,
             _governance,
             _cliffInSeconds,
@@ -99,9 +99,8 @@ contract Vesting is Initializable {
         require(vested > 0, "No tokens to release");
 
         released = released + vested;
-        token.safeTransfer(beneficiary, vested);
-
         emit Released(vested);
+        token.safeTransfer(beneficiary, vested);
     }
 
     /**
@@ -134,19 +133,25 @@ contract Vesting is Initializable {
         }
     }
 
-    function changeBeneficiary(address newBeneficiary) public onlyGovernance {
+    function changeBeneficiary(address newBeneficiary) external onlyGovernance {
+        require(newBeneficiary != address(0), "beneficiary cannot be empty");
         beneficiary = newBeneficiary;
         emit SetBeneficiary(newBeneficiary);
     }
 
-    function changeGovernance(address newGovernance) public onlyGovernance {
+    function changeGovernance(address newGovernance) external onlyGovernance {
         require(newGovernance != address(0), "governance cannot be empty");
         pendingGovernance = newGovernance;
     }
 
-    function acceptGovernance() public {
+    function acceptGovernance() external {
+        address _pendingGovernance = pendingGovernance;
         require(
-            msg.sender == pendingGovernance,
+            _pendingGovernance != address(0),
+            "changeGovernance must be called first"
+        );
+        require(
+            msg.sender == _pendingGovernance,
             "only pendingGovernance can accept this role"
         );
         pendingGovernance = address(0);

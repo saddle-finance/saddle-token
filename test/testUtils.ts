@@ -15,6 +15,9 @@ export enum TIME {
   WEEKS = 604800,
 }
 
+export const BIG_NUMBER_1E18 = BigNumber.from(10).pow(18)
+export const BIG_NUMBER_ZERO = BigNumber.from(0)
+
 // DEPLOYMENT helper functions
 
 // Workaround for linking libraries not yet working in buidler-waffle plugin

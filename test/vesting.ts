@@ -287,7 +287,7 @@ describe("Vesting", () => {
     it("Fails to accept governance when changeGovernance is not called before", async () => {
       await expect(
         vestingClone.connect(deployer).acceptGovernance(),
-      ).to.be.revertedWith("only pendingGovernance can accept this role")
+      ).to.be.revertedWith("changeGovernance must be called first")
     })
 
     it("Fails to accept governance when called by other than pendingGovernance", async () => {
