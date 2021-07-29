@@ -78,7 +78,9 @@ contract SADDLE is ERC20Permit, Pausable {
         }
 
         canUnpauseAfter = block.timestamp + _pausePeriod;
-        _pause();
+        if (_pausePeriod > 0) {
+            _pause();
+        }
 
         // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SADDLE: incorrect mint amount");
