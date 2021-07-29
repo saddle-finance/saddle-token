@@ -52,12 +52,10 @@
     "typescript": "^4.3.5"
   },
   "scripts": {
-    "lint": "npm run lint:ts && npm run lint:sol && npm run lint:json",
-    "lint:fix": "npm run lint:fix:ts && npm run lint:fix:sol && npm run lint:fix:json",
+    "lint": "npm run lint:ts && npm run lint:sol",
+    "lint:fix": "npm run lint:fix:ts && npm run lint:fix:sol",
     "lint:ts": "eslint --ext ts test/ && eslint --ext ts deploy/ && prettier --list-different {test,deploy}/**/*.ts",
     "lint:fix:ts": "eslint --ext ts --fix test/ && eslint --ext ts --fix deploy/ && prettier --write {test,deploy}/**/*.ts",
-    "lint:json": "eslint --ext json deployments/ && prettier --list-different deployments/**/*.json",
-    "lint:fix:json": "eslint --ext json deployments/ && prettier --write deployments/**/*.json",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:fix:sol": "prettier --write 'contracts/**/*.sol' && solhint 'contracts/**/*.sol' --fix",
     "build": "hardhat compile",
