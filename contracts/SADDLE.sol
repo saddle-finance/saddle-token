@@ -18,7 +18,8 @@ contract SADDLE is ERC20Permit, Pausable {
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
     uint256 constant MAX_SUPPLY = 1e9 ether;
-    uint256 public immutable canUnpauseAfter;
+    uint256 public immutable govCanUnpauseAfter;
+    uint256 public immutable anyoneCanUnpauseAfter;
     address public governance;
     address public pendingGovernance;
     mapping(address => bool) public allowedTransferee;
@@ -77,7 +78,8 @@ contract SADDLE is ERC20Permit, Pausable {
             emit Allowed(to);
         }
 
-        canUnpauseAfter = block.timestamp + _pausePeriod;
+        govCanUnpauseAfter = block.timestamp + _pausePeriod;
+        anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
         if (_pausePeriod > 0) {
             _pause();
         }
@@ -129,20 +131,19 @@ contract SADDLE is ERC20Permit, Pausable {
 
     /**
      * @notice Changes the transferability of this token.
-     * @dev When the transferability is set to false, only those in allowedTransferee array can
+     * @dev When the transfer is not enabled, only those in allowedTransferee array can
      * transfer this token.
-     * @param decision boolean value corresponding to the new transferability
      */
-    function changeTransferability(bool decision) external onlyGovernance {
+    function enableTransfer() external {
+        require(paused(), "SADDLE: transfer is enabled");
+        uint256 unpauseAfter = msg.sender == governance
+            ? govCanUnpauseAfter
+            : anyoneCanUnpauseAfter;
         require(
-            block.timestamp > canUnpauseAfter,
-            "SADDLE: cannot change transferability yet"
+            block.timestamp > unpauseAfter,
+            "SADDLE: cannot enable transfer yet"
         );
-        if (decision) {
-            _unpause();
-        } else {
-            _pause();
-        }
+        _unpause();
     }
 
     /**
