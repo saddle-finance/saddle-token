@@ -104,7 +104,7 @@ contract Vesting is Initializable {
     }
 
     /**
-     * @dev Calculates the amount that has already vested but hasn't been released yet.
+     * @notice Calculates the amount that has already vested but hasn't been released yet.
      */
     function vestedAmount() public view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
@@ -133,17 +133,31 @@ contract Vesting is Initializable {
         }
     }
 
+    /**
+     * @notice Changes beneficiary who receives the vested token.
+     * @dev Only governance can call this function.
+     * @param newBeneficiary new address to become the beneficiary
+     */
     function changeBeneficiary(address newBeneficiary) external onlyGovernance {
         require(newBeneficiary != address(0), "beneficiary cannot be empty");
         beneficiary = newBeneficiary;
         emit SetBeneficiary(newBeneficiary);
     }
 
+    /**
+     * @notice Changes governance of this contract
+     * @dev Only governance can call this function. The new governance must call `acceptGovernance` after.
+     * @param newGovernance new address to become the governance
+     */
     function changeGovernance(address newGovernance) external onlyGovernance {
         require(newGovernance != address(0), "governance cannot be empty");
         pendingGovernance = newGovernance;
     }
 
+    /**
+     * @notice Accept the new role of governance
+     * @dev `changeGovernance` must be called first to set `pendingGovernance`
+     */
     function acceptGovernance() external {
         address _pendingGovernance = pendingGovernance;
         require(
