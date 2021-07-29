@@ -20,17 +20,6 @@ let config: HardhatUserConfig = {
     coverage: {
       url: "http://127.0.0.1:8555",
     },
-    mainnet: {
-      url: process.env.ALCHEMY_API,
-      gasPrice: 12 * 1000000000,
-    },
-    ropsten: {
-      url: process.env.ALCHEMY_API_ROPSTEN,
-      gasPrice: ethers.utils.parseUnits("1.01", "gwei").toNumber(),
-      accounts: {
-        mnemonic: process.env.MNEMONIC_TEST_ACCOUNT,
-      },
-    },
   },
   paths: {
     artifacts: "./build/artifacts",
@@ -74,41 +63,6 @@ let config: HardhatUserConfig = {
     overwrite: false,
     runOnCompile: true,
   },
-}
-
-if (process.env.ETHERSCAN_API) {
-  config = { ...config, etherscan: { apiKey: process.env.ETHERSCAN_API } }
-}
-
-if (process.env.ACCOUNT_PRIVATE_KEYS) {
-  config.networks = {
-    ...config.networks,
-    mainnet: {
-      ...config.networks?.mainnet,
-      accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS),
-    },
-  }
-}
-
-if (process.env.FORK_MAINNET === "true" && config.networks) {
-  console.log("FORK_MAINNET is set to true")
-  config = {
-    ...config,
-    networks: {
-      ...config.networks,
-      hardhat: {
-        forking: {
-          url: process.env.ALCHEMY_API ? process.env.ALCHEMY_API : "",
-        },
-        chainId: 1,
-      },
-    },
-    external: {
-      deployments: {
-        hardhat: ["deployments/mainnet"],
-      },
-    },
-  }
 }
 
 export default config
