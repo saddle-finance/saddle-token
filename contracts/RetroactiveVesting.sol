@@ -8,39 +8,34 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 contract RetroactiveVesting {
     using SafeERC20 for IERC20;
 
-    event Claimed(address account, uint256 amount);
-
     struct VestingData {
         bool isVerified;
-        uint96 totalAmount;
-        uint96 released;
+        uint120 totalAmount;
+        uint120 released;
     }
 
+    event Claimed(address account, uint256 amount);
+
+    IERC20 public immutable TOKEN;
+    bytes32 public immutable MERKLE_ROOT;
+    uint256 public immutable START_TIMESTAMP;
+    uint256 public constant DURATION = 2 * (52 weeks);
+
     mapping(address => VestingData) public vestings;
-
-    IERC20 public immutable token;
-    bytes32 public immutable merkleRoot;
-
-    uint256 public durationInSeconds;
-    uint256 public startTimestamp;
-    address public governance;
-    address public pendingGovernance;
 
     constructor(
         IERC20 token_,
         bytes32 merkleRoot_,
-        uint256 startTimestamp_,
-        uint256 durationInSeconds_
+        uint256 startTimestamp_
     ) public {
-        token = token_;
-        merkleRoot = merkleRoot_;
-        startTimestamp = startTimestamp_;
-        durationInSeconds = durationInSeconds_;
+        TOKEN = token_;
+        MERKLE_ROOT = merkleRoot_;
+        START_TIMESTAMP = startTimestamp_;
     }
 
     function verifyAndClaimReward(
         address account,
-        uint96 totalAmount,
+        uint256 totalAmount,
         bytes32[] calldata merkleProof
     ) external {
         VestingData storage vesting = vestings[account];
@@ -48,11 +43,11 @@ contract RetroactiveVesting {
             // Verify the merkle proof.
             bytes32 node = keccak256(abi.encodePacked(account, totalAmount));
             require(
-                MerkleProof.verify(merkleProof, merkleRoot, node),
-                "MerkleDistributor: Invalid proof."
+                MerkleProof.verify(merkleProof, MERKLE_ROOT, node),
+                "could not verify merkleProof"
             );
             vesting.isVerified = true;
-            vesting.totalAmount = totalAmount;
+            vesting.totalAmount = uint120(totalAmount);
         }
         _claimReward(account);
     }
@@ -65,9 +60,9 @@ contract RetroactiveVesting {
     function _claimReward(address account) internal {
         VestingData storage vesting = vestings[account];
         uint256 released = vesting.released;
-        uint256 amount = _vestedAmount(vesting.totalAmount, released);
-        vesting.released = uint96(amount - released);
-        token.safeTransfer(msg.sender, amount);
+        uint256 amount = _vestedAmount(vesting.totalAmount, released, START_TIMESTAMP, DURATION);
+        vesting.released = uint120(amount - released);
+        TOKEN.safeTransfer(msg.sender, amount);
 
         emit Claimed(account, amount);
     }
@@ -76,36 +71,37 @@ contract RetroactiveVesting {
         return
             _vestedAmount(
                 vestings[beneficiary].totalAmount,
-                vestings[beneficiary].released
+                vestings[beneficiary].released,
+                START_TIMESTAMP,
+                DURATION
             );
     }
 
     /**
      * @notice Calculates the amount that has already vested but hasn't been released yet.
      */
-    function _vestedAmount(uint256 totalAmount, uint256 released)
+    function _vestedAmount(uint256 total, uint256 released, uint256 startTimestamp, uint256 durationInSeconds)
         internal
         view
         returns (uint256)
     {
-        uint256 _startTimestamp = startTimestamp;
-        uint256 _duration = durationInSeconds;
         uint256 blockTimestamp = block.timestamp;
 
-        if (blockTimestamp < _startTimestamp) {
+        // If current block is before the start, there are no vested amount.
+        if (blockTimestamp < startTimestamp) {
             return 0;
         }
 
-        uint256 elapsedTime = blockTimestamp - _startTimestamp;
-        uint256 unreleased;
+        uint256 elapsedTime = blockTimestamp - startTimestamp;
+        uint256 vested;
 
         // If over vesting duration, all tokens vested
-        if (elapsedTime >= _duration) {
-            unreleased = totalAmount;
+        if (elapsedTime >= durationInSeconds) {
+            vested = total;
         } else {
-            unreleased = (totalAmount * elapsedTime) / _duration;
+            vested = (total * elapsedTime) / durationInSeconds;
         }
 
-        return unreleased - released;
+        return vested - released;
     }
 }
