@@ -53,6 +53,9 @@ contract RetroactiveVesting {
     }
 
     function claimReward(address account) external {
+        if (account == address(0)) {
+            account = msg.sender;
+        }
         require(vestings[account].isVerified, "must verify first");
         _claimReward(account);
     }
@@ -60,18 +63,24 @@ contract RetroactiveVesting {
     function _claimReward(address account) internal {
         VestingData storage vesting = vestings[account];
         uint256 released = vesting.released;
-        uint256 amount = _vestedAmount(vesting.totalAmount, released, START_TIMESTAMP, DURATION);
-        vesting.released = uint120(amount - released);
-        TOKEN.safeTransfer(msg.sender, amount);
+        uint256 amount = _vestedAmount(
+            vesting.totalAmount,
+            released,
+            START_TIMESTAMP,
+            DURATION
+        );
+        vesting.released = uint120(amount + released);
+        TOKEN.safeTransfer(account, amount);
 
         emit Claimed(account, amount);
     }
 
-    function vestedAmount(address beneficiary) external view returns (uint256) {
+    function vestedAmount(address account) external view returns (uint256) {
+        require(vestings[account].isVerified, "must verify first");
         return
             _vestedAmount(
-                vestings[beneficiary].totalAmount,
-                vestings[beneficiary].released,
+                vestings[account].totalAmount,
+                vestings[account].released,
                 START_TIMESTAMP,
                 DURATION
             );
@@ -80,11 +89,12 @@ contract RetroactiveVesting {
     /**
      * @notice Calculates the amount that has already vested but hasn't been released yet.
      */
-    function _vestedAmount(uint256 total, uint256 released, uint256 startTimestamp, uint256 durationInSeconds)
-        internal
-        view
-        returns (uint256)
-    {
+    function _vestedAmount(
+        uint256 total,
+        uint256 released,
+        uint256 startTimestamp,
+        uint256 durationInSeconds
+    ) internal view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
 
         // If current block is before the start, there are no vested amount.
