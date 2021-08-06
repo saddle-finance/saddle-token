@@ -5,6 +5,11 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
+/**
+ * @title RetroactiveVesting
+ * @notice A token holder contract that can release its token balance linearly over
+ * the vesting period. Respective address and the amount are included in each merkle node.
+ */
 contract RetroactiveVesting {
     using SafeERC20 for IERC20;
 
@@ -23,6 +28,12 @@ contract RetroactiveVesting {
 
     mapping(address => VestingData) public vestings;
 
+    /**
+     * @notice Deploys this contract with given parameters
+     * @params token_ Address of the token that will be vested
+     * @params merkleRoot_ Bytes of the merkle root node which is generated off chain.
+     * @params startTimestamp_ Timestamp in seconds when to start vesting. This can be backdated as well.
+     */
     constructor(
         IERC20 token_,
         bytes32 merkleRoot_,
@@ -33,6 +44,13 @@ contract RetroactiveVesting {
         START_TIMESTAMP = startTimestamp_;
     }
 
+    /**
+     * @notice Verifies the given account is eligible for the given amount. Then claims the
+     * vested amount out of the total amount eligible.
+     * @params account Address of the account that the caller is verifying for
+     * @params totalAmount Total amount that will be vested linearly
+     * @params merkleProof Merkle proof that was generated off chain.
+     */
     function verifyAndClaimReward(
         address account,
         uint256 totalAmount,
@@ -52,6 +70,11 @@ contract RetroactiveVesting {
         _claimReward(account);
     }
 
+    /**
+     * @notice Claims the vested amount out of the total amount eligible for the given account.
+     * @params account Address of the account that the caller is claiming for. If this is set
+     * to `address(0)`, it will use the `msg.sender` instead.
+     */
     function claimReward(address account) external {
         if (account == address(0)) {
             account = msg.sender;
@@ -75,6 +98,11 @@ contract RetroactiveVesting {
         emit Claimed(account, amount);
     }
 
+    /**
+     * @notice Calculated the amount that has already vested but hasn't been released yet.
+     * Reverts if the given account has not been verified.
+     * @params account Address to calculated the vested amount for
+     */
     function vestedAmount(address account) external view returns (uint256) {
         require(vestings[account].isVerified, "must verify first");
         return
