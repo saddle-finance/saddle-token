@@ -1,8 +1,4 @@
-import {
-  ZERO_ADDRESS,
-  getDeployedContractByName,
-  setTimestamp,
-} from "./testUtils"
+import { ZERO_ADDRESS, setTimestamp } from "./testUtils"
 import { solidity } from "ethereum-waffle"
 import { deployments } from "hardhat"
 
@@ -22,14 +18,14 @@ describe("Vesting", () => {
   let governance: Signer
   let governanceAddress: string
   let malActor: Signer
-  let vesting: Vesting
   let vestingClone: Vesting
+  let vesting: Vesting
   let dummyToken: GenericERC20
   let cloner: Cloner
 
   const setupTest = deployments.createFixture(
     async ({ deployments, ethers }) => {
-      const { deploy, execute } = deployments
+      const { deploy } = deployments
       await deployments.fixture() // ensure you start from a fresh deployments
 
       signers = await ethers.getSigners()
@@ -41,32 +37,19 @@ describe("Vesting", () => {
       governanceAddress = await governance.getAddress()
       malActor = signers[10]
 
-      vesting = (await getDeployedContractByName(
-        deployments,
-        "Vesting",
-      )) as Vesting
-
       await deploy("DummyToken", {
         contract: "GenericERC20",
         args: ["DummyToken", "TOKEN", 18],
-        log: true,
-        skipIfAlreadyDeployed: true,
         from: deployerAddress,
       })
-
-      dummyToken = (await getDeployedContractByName(
-        deployments,
-        "DummyToken",
-      )) as GenericERC20
+      dummyToken = await ethers.getContract("DummyToken")
       await dummyToken.mint(
         deployerAddress,
         BigNumber.from(10).pow(18).mul(10000),
       )
 
-      cloner = (await getDeployedContractByName(
-        deployments,
-        "Cloner",
-      )) as Cloner
+      cloner = await ethers.getContract("Cloner")
+      vesting = await ethers.getContract("Vesting")
 
       const cloneAddress = await cloner.callStatic.clone(vesting.address)
       await cloner.clone(vesting.address)

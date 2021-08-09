@@ -18,6 +18,25 @@ export enum TIME {
 export const BIG_NUMBER_1E18 = BigNumber.from(10).pow(18)
 export const BIG_NUMBER_ZERO = BigNumber.from(0)
 
+export const CHAIN_ID = {
+  MAINNET: "1",
+  ROPSTEN: "3",
+  KOVAN: "42",
+  HARDHAT: "31337",
+}
+
+export function isMainnet(networkId: string): boolean {
+  return networkId == CHAIN_ID.MAINNET
+}
+
+export function isTestNetwork(networkId: string): boolean {
+  return (
+    networkId == CHAIN_ID.HARDHAT ||
+    networkId == CHAIN_ID.ROPSTEN ||
+    networkId == CHAIN_ID.KOVAN
+  )
+}
+
 // DEPLOYMENT helper functions
 
 // Workaround for linking libraries not yet working in buidler-waffle plugin
