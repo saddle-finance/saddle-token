@@ -2,14 +2,13 @@ import {
   BIG_NUMBER_1E18,
   BIG_NUMBER_ZERO,
   getCurrentBlockTimestamp,
-  getDeployedContractByName,
   setTimestamp,
   ZERO_ADDRESS,
 } from "./testUtils"
 import { solidity } from "ethereum-waffle"
-import { deployments } from "hardhat"
+import { deployments, ethers } from "hardhat"
 
-import { GenericERC20, SADDLE, Vesting } from "../build/typechain/"
+import { SADDLE, Vesting } from "../build/typechain/"
 import { BigNumber, Signer } from "ethers"
 import chai from "chai"
 import { DeployResult } from "hardhat-deploy/dist/types"
@@ -89,10 +88,7 @@ describe("Token", () => {
       }
       expect(totalMintedAmount).to.eq(BIG_NUMBER_1E18.mul(1e9))
 
-      vesting = (await getDeployedContractByName(
-        deployments,
-        "Vesting",
-      )) as Vesting
+      vesting = await ethers.getContract("Vesting")
 
       // Calculate deterministic deployment address
       const determinedDeployment = await deterministic("SADDLE", {
@@ -128,10 +124,7 @@ describe("Token", () => {
       }
 
       startTimestamp = await getCurrentBlockTimestamp()
-      saddleToken = (await getDeployedContractByName(
-        deployments,
-        "SADDLE",
-      )) as SADDLE
+      saddleToken = await ethers.getContract("SADDLE")
     },
   )
 
@@ -398,10 +391,7 @@ describe("Token", () => {
         args: ["DummyToken", "TOKEN", 18],
       })
 
-      const dummyToken = (await getDeployedContractByName(
-        deployments,
-        "DummyToken",
-      )) as GenericERC20
+      const dummyToken = await ethers.getContract("DummyToken")
       await dummyToken.mint(saddleToken.address, BIG_NUMBER_1E18.mul(10000))
 
       expect(await dummyToken.balanceOf(saddleToken.address)).to.eq(
