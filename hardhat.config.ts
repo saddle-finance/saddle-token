@@ -10,15 +10,14 @@ import "hardhat-spdx-license-identifier"
 
 import { HardhatUserConfig } from "hardhat/config"
 import dotenv from "dotenv"
-import { ethers } from "ethers"
 
 dotenv.config()
 
-let config: HardhatUserConfig = {
+const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
-    coverage: {
-      url: "http://127.0.0.1:8555",
+    hardhat: {
+      hardfork: process.env.CODE_COVERAGE ? "berlin" : "london",
     },
   },
   paths: {
