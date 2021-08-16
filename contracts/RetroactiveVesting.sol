@@ -64,6 +64,7 @@ contract RetroactiveVesting {
                 MerkleProof.verify(merkleProof, MERKLE_ROOT, node),
                 "could not verify merkleProof"
             );
+            // Save the verified state
             vesting.isVerified = true;
             vesting.totalAmount = uint120(totalAmount);
         }
