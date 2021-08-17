@@ -30,9 +30,9 @@ contract RetroactiveVesting {
 
     /**
      * @notice Deploys this contract with given parameters
-     * @params token_ Address of the token that will be vested
-     * @params merkleRoot_ Bytes of the merkle root node which is generated off chain.
-     * @params startTimestamp_ Timestamp in seconds when to start vesting. This can be backdated as well.
+     * @param token_ Address of the token that will be vested
+     * @param merkleRoot_ Bytes of the merkle root node which is generated off chain.
+     * @param startTimestamp_ Timestamp in seconds when to start vesting. This can be backdated as well.
      */
     constructor(
         IERC20 token_,
@@ -47,9 +47,9 @@ contract RetroactiveVesting {
     /**
      * @notice Verifies the given account is eligible for the given amount. Then claims the
      * vested amount out of the total amount eligible.
-     * @params account Address of the account that the caller is verifying for
-     * @params totalAmount Total amount that will be vested linearly
-     * @params merkleProof Merkle proof that was generated off chain.
+     * @param account Address of the account that the caller is verifying for
+     * @param totalAmount Total amount that will be vested linearly
+     * @param merkleProof Merkle proof that was generated off chain.
      */
     function verifyAndClaimReward(
         address account,
@@ -73,7 +73,7 @@ contract RetroactiveVesting {
 
     /**
      * @notice Claims the vested amount out of the total amount eligible for the given account.
-     * @params account Address of the account that the caller is claiming for. If this is set
+     * @param account Address of the account that the caller is claiming for. If this is set
      * to `address(0)`, it will use the `msg.sender` instead.
      */
     function claimReward(address account) external {
@@ -102,7 +102,7 @@ contract RetroactiveVesting {
     /**
      * @notice Calculated the amount that has already vested but hasn't been released yet.
      * Reverts if the given account has not been verified.
-     * @params account Address to calculated the vested amount for
+     * @param account Address to calculated the vested amount for
      */
     function vestedAmount(address account) external view returns (uint256) {
         require(vestings[account].isVerified, "must verify first");
