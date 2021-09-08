@@ -8,7 +8,10 @@ import {
 import { solidity } from "ethereum-waffle"
 import { deployments } from "hardhat"
 
-import { GenericERC20, RetroactiveVesting } from "../build/typechain/"
+import {
+  GenericERC20WithGovernance,
+  RetroactiveVesting,
+} from "../build/typechain/"
 import { BigNumber, Signer } from "ethers"
 import chai from "chai"
 import * as merkleTreeData from "./merkleTree.json"
@@ -39,7 +42,7 @@ describe("Retroactive Vesting", () => {
   let user2: Signer
   let user2Address: string
   let malActor: Signer
-  let dummyToken: GenericERC20
+  let dummyToken: GenericERC20WithGovernance
   let retroactiveVesting: RetroactiveVesting
   let startTimestamp: number
 
@@ -58,7 +61,7 @@ describe("Retroactive Vesting", () => {
       malActor = signers[10]
 
       await deploy("DummyToken", {
-        contract: "GenericERC20",
+        contract: "GenericERC20WithGovernance",
         args: ["DummyToken", "TOKEN", 18],
         log: true,
         skipIfAlreadyDeployed: true,
@@ -68,7 +71,7 @@ describe("Retroactive Vesting", () => {
       dummyToken = (await getDeployedContractByName(
         deployments,
         "DummyToken",
-      )) as GenericERC20
+      )) as GenericERC20WithGovernance
 
       startTimestamp = await getCurrentBlockTimestamp()
 

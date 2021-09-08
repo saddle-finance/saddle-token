@@ -4,16 +4,18 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../SimpleGovernance.sol";
 
 /**
  * @title Generic ERC20 token
  * @notice This contract simulates a generic ERC20 token that is mintable and burnable.
  */
-contract GenericERC20 is ERC20, Ownable {
+contract GenericERC20WithGovernance is ERC20, Ownable, SimpleGovernance {
     uint8 private _decimals;
 
     /**
-     * @notice Deploy this contract with given name, symbol, and decimals
+     * @notice Deploy this contract with given name, symbol, and decimals. Governance is set to
+     * msg.sender.
      * @dev the caller of this constructor will become the owner of this contract
      * @param name_ name of this token
      * @param symbol_ symbol of this token
@@ -25,6 +27,7 @@ contract GenericERC20 is ERC20, Ownable {
         uint8 decimals_
     ) public ERC20(name_, symbol_) {
         _decimals = decimals_;
+        governance = _msgSender();
     }
 
     /**

@@ -5,6 +5,8 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "./SimpleGovernance.sol";
 
 /**
  * @title Vesting
@@ -12,18 +14,16 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * typical vesting scheme, with a cliff and vesting period. Optionally revocable by the
  * owner.
  */
-contract Vesting is Initializable {
+contract Vesting is Initializable, Context {
     using SafeERC20 for IERC20;
 
     event Released(uint256 amount);
     event VestingInitialized(
         address beneficiary,
-        address governance,
         uint256 cliff,
         uint256 duration
     );
     event SetBeneficiary(address beneficiary);
-    event SetGovernance(address governance);
 
     // beneficiary of tokens after they are released
     address public beneficiary;
@@ -33,15 +33,24 @@ contract Vesting is Initializable {
     uint256 public durationInSeconds;
     uint256 public startTimestamp;
     uint256 public released;
-    address public governance;
-    address public pendingGovernance;
 
     /**
-     * @dev Sets the governance to msg.sender on deploying this contract. This prevents others from
+     * @dev Sets the beneficiary to _msgSender() on deploying this contract. This prevents others from
      * initializing the logic contract.
      */
     constructor() public {
-        governance = msg.sender;
+        beneficiary = _msgSender();
+    }
+
+    /**
+     * @dev Limits certain functions to be called by governance
+     */
+    modifier onlyGovernance() {
+        require(
+            _msgSender() == governance(),
+            "only governance can perform this action"
+        );
+        _;
     }
 
     /**
@@ -57,12 +66,10 @@ contract Vesting is Initializable {
         address _token,
         address _beneficiary,
         uint256 _cliffInSeconds,
-        uint256 _durationInSeconds,
-        address _governance
+        uint256 _durationInSeconds
     ) external initializer {
-        require(governance == address(0), "cannot initialize logic contract");
+        require(beneficiary == address(0), "cannot initialize logic contract");
         require(_beneficiary != address(0), "beneficiary cannot be empty");
-        require(_governance != address(0), "governance cannot be empty");
         require(
             _cliffInSeconds <= _durationInSeconds,
             "cliff is greater than duration"
@@ -73,22 +80,12 @@ contract Vesting is Initializable {
         durationInSeconds = _durationInSeconds;
         cliffInSeconds = _cliffInSeconds;
         startTimestamp = block.timestamp;
-        governance = _governance;
 
         emit VestingInitialized(
             _beneficiary,
-            _governance,
             _cliffInSeconds,
             _durationInSeconds
         );
-    }
-
-    modifier onlyGovernance() {
-        require(
-            msg.sender == governance,
-            "only governance can perform this action"
-        );
-        _;
     }
 
     /**
@@ -145,31 +142,10 @@ contract Vesting is Initializable {
     }
 
     /**
-     * @notice Changes governance of this contract
-     * @dev Only governance can call this function. The new governance must call `acceptGovernance` after.
-     * @param newGovernance new address to become the governance
+     * @notice Governance who owns this contract.
+     * @dev Governance of the token contract also owns this vesting contract.
      */
-    function changeGovernance(address newGovernance) external onlyGovernance {
-        require(newGovernance != address(0), "governance cannot be empty");
-        pendingGovernance = newGovernance;
-    }
-
-    /**
-     * @notice Accept the new role of governance
-     * @dev `changeGovernance` must be called first to set `pendingGovernance`
-     */
-    function acceptGovernance() external {
-        address _pendingGovernance = pendingGovernance;
-        require(
-            _pendingGovernance != address(0),
-            "changeGovernance must be called first"
-        );
-        require(
-            msg.sender == _pendingGovernance,
-            "only pendingGovernance can accept this role"
-        );
-        pendingGovernance = address(0);
-        governance = msg.sender;
-        emit SetGovernance(msg.sender);
+    function governance() public view returns (address) {
+        return SimpleGovernance(address(token)).governance();
     }
 }

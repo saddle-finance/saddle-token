@@ -108,11 +108,12 @@ describe("Token", () => {
       // Deploy the token contract
       const deployResult: DeployResult = await determinedDeployment.deploy()
 
+      console.log(`Gas used to deploy token: ${deployResult.receipt?.gasUsed}`)
+
       // Find the newly deployed vesting contract proxies via logs
       const vestingInitLogs = deployResult.receipt?.logs?.filter(
         (log) =>
-          log.topics[0] ===
-          id("VestingInitialized(address,address,uint256,uint256)"),
+          log.topics[0] === id("VestingInitialized(address,uint256,uint256)"),
       )
 
       if (vestingInitLogs) {
@@ -419,10 +420,9 @@ describe("Token", () => {
     it("Successfully rescues ERC20", async () => {
       await deployments.deploy("DummyToken", {
         from: deployerAddress,
-        contract: "GenericERC20",
+        contract: "GenericERC20WithGovernance",
         args: ["DummyToken", "TOKEN", 18],
       })
-
       const dummyToken = await ethers.getContract("DummyToken")
       await dummyToken.mint(saddleToken.address, BIG_NUMBER_1E18.mul(10000))
 

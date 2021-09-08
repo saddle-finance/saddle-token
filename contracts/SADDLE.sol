@@ -7,26 +7,24 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20VotesComp.sol";
 import "./Vesting.sol";
+import "./SimpleGovernance.sol";
 
 /**
  * @title Saddle token
  * @notice A token that is deployed with fixed amount and appropriate vesting contracts.
  * Transfer is blocked for a period of time until the governance can toggle the transferability.
  */
-contract SADDLE is ERC20Permit, Pausable {
+contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
     using SafeERC20 for IERC20;
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
     uint256 constant MAX_SUPPLY = 1e9 ether;
     uint256 public immutable govCanUnpauseAfter;
     uint256 public immutable anyoneCanUnpauseAfter;
-    address public governance;
-    address public pendingGovernance;
     mapping(address => bool) public allowedTransferee;
 
     event Allowed(address target);
     event Disallowed(address target);
-    event SetGovernance(address governance);
 
     struct Recipient {
         address to;
@@ -59,17 +57,17 @@ contract SADDLE is ERC20Permit, Pausable {
 
         for (uint256 i = 0; i < _recipients.length; i++) {
             address to = _recipients[i].to;
-            if (_recipients[i].durationPeriod > 0) {
+            if (_recipients[i].durationPeriod != 0) {
                 // If the recipients require vesting, deploy a clone of Vesting.sol
                 Vesting vestingContract = Vesting(
                     Clones.clone(_vestingContractTarget)
                 );
+                // Initializes clone contracts
                 vestingContract.initialize(
                     address(this),
                     to,
                     _recipients[i].cliffPeriod,
-                    _recipients[i].durationPeriod,
-                    _governance
+                    _recipients[i].durationPeriod
                 );
                 to = address(vestingContract);
             }
@@ -87,46 +85,6 @@ contract SADDLE is ERC20Permit, Pausable {
         // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SADDLE: incorrect mint amount");
         emit SetGovernance(_governance);
-    }
-
-    modifier onlyGovernance() {
-        require(
-            _msgSender() == governance,
-            "SADDLE: only governance can perform this action"
-        );
-        _;
-    }
-
-    /**
-     * @notice Changes governance of this contract
-     * @dev Only governance can call this function. The new governance must call `acceptGovernance` after.
-     * @param newGovernance new address to become the governance
-     */
-    function changeGovernance(address newGovernance) external onlyGovernance {
-        require(
-            newGovernance != address(0),
-            "SADDLE: governance cannot be empty"
-        );
-        pendingGovernance = newGovernance;
-    }
-
-    /**
-     * @notice Accept the new role of governance
-     * @dev `changeGovernance` must be called first to set `pendingGovernance`
-     */
-    function acceptGovernance() external {
-        address _pendingGovernance = pendingGovernance;
-        require(
-            _pendingGovernance != address(0),
-            "SADDLE: changeGovernance must be called first"
-        );
-        require(
-            msg.sender == _pendingGovernance,
-            "SADDLE: only pendingGovernance can accept this role"
-        );
-        pendingGovernance = address(0);
-        governance = msg.sender;
-        emit SetGovernance(msg.sender);
     }
 
     /**
