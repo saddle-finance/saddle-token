@@ -21,8 +21,6 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
     uint256 constant MAX_SUPPLY = 1e9 ether;
     uint256 public immutable govCanUnpauseAfter;
     uint256 public immutable anyoneCanUnpauseAfter;
-    address public governance;
-    address public pendingGovernance;
     mapping(address => bool) public allowedTransferee;
 
     event Allowed(address target);
