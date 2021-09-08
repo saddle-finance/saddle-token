@@ -171,10 +171,18 @@ describe("Token", () => {
     })
   })
 
-  describe("canUnpauseAfter", () => {
-    it("Successfully sets canUnpauseAfter to be in the future on deployment", async () => {
-      expect(await saddleToken.canUnpauseAfter()).to.eq(
+  describe("govCanUnpauseAfter", () => {
+    it("Successfully sets govCanUnpauseAfter to be in the future on deployment", async () => {
+      expect(await saddleToken.govCanUnpauseAfter()).to.eq(
         BigNumber.from(startTimestamp).add(PAUSE_PERIOD),
+      )
+    })
+  })
+
+  describe("anyoneCanUnpauseAfter", () => {
+    it("Successfully sets anyoneCanUnpauseAfter to be 1 year after the deployment", async () => {
+      expect(await saddleToken.anyoneCanUnpauseAfter()).to.eq(
+        BigNumber.from(startTimestamp).add("31449600"),
       )
     })
   })
@@ -221,41 +229,65 @@ describe("Token", () => {
     })
   })
 
-  describe("changeTransferability", () => {
-    it("Reverts when governance attempts to unpause before canUnpauseAfter", async () => {
-      expect(await saddleToken.canUnpauseAfter()).to.gt(
+  describe("enableTransfer", () => {
+    it("Reverts when governance attempts to unpause before govCanUnpauseAfter", async () => {
+      expect(await saddleToken.govCanUnpauseAfter()).to.gt(
         await getCurrentBlockTimestamp(),
       )
       await expect(
-        saddleToken.connect(governance).changeTransferability(true),
-      ).to.be.revertedWith("SADDLE: cannot change transferability yet")
+        saddleToken.connect(governance).enableTransfer(),
+      ).to.be.revertedWith("SADDLE: cannot enable transfer yet")
     })
 
-    it("Reverts when non-governance attempts to unpause after canUnpauseAfter", async () => {
-      await setTimestamp((await saddleToken.canUnpauseAfter()).add(1))
-      expect(await saddleToken.canUnpauseAfter()).to.lte(
+    it("Reverts when non-governance attempts to unpause after govCanUnpauseAfter", async () => {
+      await setTimestamp((await saddleToken.govCanUnpauseAfter()).add(1))
+      expect(await saddleToken.govCanUnpauseAfter()).to.lte(
         await getCurrentBlockTimestamp(),
       )
 
       await expect(
-        saddleToken.connect(deployer).changeTransferability(true),
-      ).to.be.revertedWith("SADDLE: only governance can perform this action")
+        saddleToken.connect(deployer).enableTransfer(),
+      ).to.be.revertedWith("SADDLE: cannot enable transfer yet")
     })
 
-    it("Succeeds when governance attempts to unpause after canUnpauseAfter", async () => {
-      await setTimestamp((await saddleToken.canUnpauseAfter()).add(1))
-      expect(await saddleToken.canUnpauseAfter()).to.lte(
+    it("Succeeds when governance attempts to unpause after govCanUnpauseAfter", async () => {
+      await setTimestamp((await saddleToken.govCanUnpauseAfter()).add(1))
+      expect(await saddleToken.govCanUnpauseAfter()).to.lte(
         await getCurrentBlockTimestamp(),
       )
 
-      await saddleToken.connect(governance).changeTransferability(true)
+      await saddleToken.connect(governance).enableTransfer()
       expect(await saddleToken.paused()).to.be.false
     })
 
-    describe("transfer after changeTransferability", () => {
+    it("Succeeds when non-governance attempts to unpause after anyoneCanUnpauseAfter", async () => {
+      await setTimestamp((await saddleToken.anyoneCanUnpauseAfter()).add(1))
+      expect(await saddleToken.anyoneCanUnpauseAfter()).to.lte(
+        await getCurrentBlockTimestamp(),
+      )
+
+      await saddleToken.enableTransfer()
+      expect(await saddleToken.paused()).to.be.false
+    })
+
+    it("Reverts when attempting to call enableTransfer after it is already unpaused", async () => {
+      await setTimestamp((await saddleToken.anyoneCanUnpauseAfter()).add(1))
+      expect(await saddleToken.anyoneCanUnpauseAfter()).to.lte(
+        await getCurrentBlockTimestamp(),
+      )
+
+      await saddleToken.enableTransfer()
+      expect(await saddleToken.paused()).to.be.false
+
+      await expect(
+        saddleToken.connect(deployer).enableTransfer(),
+      ).to.be.revertedWith("SADDLE: transfer is enabled")
+    })
+
+    describe("transfer after enableTransfer", () => {
       beforeEach(async () => {
-        await setTimestamp((await saddleToken.canUnpauseAfter()).add(1))
-        await saddleToken.connect(governance).changeTransferability(true)
+        await setTimestamp((await saddleToken.govCanUnpauseAfter()).add(1))
+        await saddleToken.connect(governance).enableTransfer()
       })
 
       it("Succeeds when transferring from an allowed address", async () => {
