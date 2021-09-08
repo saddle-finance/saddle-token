@@ -16,7 +16,7 @@ abstract contract SimpleGovernance is Context {
     modifier onlyGovernance() {
         require(
             _msgSender() == governance,
-            "SADDLE: only governance can perform this action"
+            "only governance can perform this action"
         );
         _;
     }
@@ -27,10 +27,7 @@ abstract contract SimpleGovernance is Context {
      * @param newGovernance new address to become the governance
      */
     function changeGovernance(address newGovernance) external onlyGovernance {
-        require(
-            newGovernance != address(0),
-            "SADDLE: governance cannot be empty"
-        );
+        require(newGovernance != address(0), "governance cannot be empty");
         pendingGovernance = newGovernance;
     }
 
@@ -42,11 +39,11 @@ abstract contract SimpleGovernance is Context {
         address _pendingGovernance = pendingGovernance;
         require(
             _pendingGovernance != address(0),
-            "SADDLE: changeGovernance must be called first"
+            "changeGovernance must be called first"
         );
         require(
             _msgSender() == _pendingGovernance,
-            "SADDLE: only pendingGovernance can accept this role"
+            "only pendingGovernance can accept this role"
         );
         pendingGovernance = address(0);
         governance = _msgSender();

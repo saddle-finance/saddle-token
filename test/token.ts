@@ -8,7 +8,7 @@ import {
 import { solidity } from "ethereum-waffle"
 import { deployments, ethers } from "hardhat"
 
-import { SADDLE, Vesting } from "../build/typechain/"
+import { SDL, Vesting } from "../build/typechain/"
 import { BigNumber, Signer } from "ethers"
 import chai from "chai"
 import { DeployResult } from "hardhat-deploy/dist/types"
@@ -24,7 +24,7 @@ describe("Token", () => {
   let governance: Signer
   let governanceAddress: string
   let vesting: Vesting
-  let saddleToken: SADDLE
+  let saddleToken: SDL
   let startTimestamp: number
   const PAUSE_PERIOD = 1800
   const vestingContracts: Vesting[] = []
@@ -91,7 +91,7 @@ describe("Token", () => {
       vesting = await ethers.getContract("Vesting")
 
       // Calculate deterministic deployment address
-      const determinedDeployment = await deterministic("SADDLE", {
+      const determinedDeployment = await deterministic("SDL", {
         from: deployerAddress,
         args: [governanceAddress, PAUSE_PERIOD, recipients, vesting.address],
         log: true,
@@ -125,7 +125,7 @@ describe("Token", () => {
       }
 
       startTimestamp = await getCurrentBlockTimestamp()
-      saddleToken = await ethers.getContract("SADDLE")
+      saddleToken = await ethers.getContract("SDL")
     },
   )
 
@@ -225,7 +225,7 @@ describe("Token", () => {
           await signers[16].getAddress(),
           BIG_NUMBER_1E18.mul(1e8),
         ),
-      ).to.be.revertedWith("SADDLE: paused")
+      ).to.be.revertedWith("SDL: paused")
     })
   })
 
@@ -236,7 +236,7 @@ describe("Token", () => {
       )
       await expect(
         saddleToken.connect(governance).enableTransfer(),
-      ).to.be.revertedWith("SADDLE: cannot enable transfer yet")
+      ).to.be.revertedWith("SDL: cannot enable transfer yet")
     })
 
     it("Reverts when non-governance attempts to unpause after govCanUnpauseAfter", async () => {
@@ -247,7 +247,7 @@ describe("Token", () => {
 
       await expect(
         saddleToken.connect(deployer).enableTransfer(),
-      ).to.be.revertedWith("SADDLE: cannot enable transfer yet")
+      ).to.be.revertedWith("SDL: cannot enable transfer yet")
     })
 
     it("Succeeds when governance attempts to unpause after govCanUnpauseAfter", async () => {
@@ -281,7 +281,7 @@ describe("Token", () => {
 
       await expect(
         saddleToken.connect(deployer).enableTransfer(),
-      ).to.be.revertedWith("SADDLE: transfer is enabled")
+      ).to.be.revertedWith("SDL: transfer is enabled")
     })
 
     describe("transfer after enableTransfer", () => {
@@ -347,7 +347,7 @@ describe("Token", () => {
     it("Reverts when called by non-governance", async () => {
       await expect(
         saddleToken.connect(deployer).addToAllowedList([deployerAddress]),
-      ).to.be.revertedWith("SADDLE: only governance can perform this action")
+      ).to.be.revertedWith("only governance can perform this action")
     })
   })
 
@@ -362,7 +362,7 @@ describe("Token", () => {
         saddleToken
           .connect(signers[13])
           .transfer(deployerAddress, BIG_NUMBER_1E18.mul(1e8)),
-      ).to.be.revertedWith("SADDLE: paused")
+      ).to.be.revertedWith("SDL: paused")
     })
 
     it("Reverts when called by non-governance", async () => {
@@ -370,7 +370,7 @@ describe("Token", () => {
         saddleToken
           .connect(deployer)
           .removeFromAllowedList([await signers[13].getAddress()]),
-      ).to.be.revertedWith("SADDLE: only governance can perform this action")
+      ).to.be.revertedWith("only governance can perform this action")
     })
   })
 
@@ -378,7 +378,7 @@ describe("Token", () => {
     it("Reverts when called by other than the governance", async () => {
       await expect(
         saddleToken.connect(deployer).changeGovernance(deployerAddress),
-      ).to.be.revertedWith("SADDLE: only governance can perform this action")
+      ).to.be.revertedWith("only governance can perform this action")
     })
 
     it("Succeeds to change governance", async () => {
@@ -392,7 +392,7 @@ describe("Token", () => {
     it("Reverts when accepting governance when changeGovernance is not called before", async () => {
       await expect(
         saddleToken.connect(deployer).acceptGovernance(),
-      ).to.be.revertedWith("SADDLE: changeGovernance must be called first")
+      ).to.be.revertedWith("changeGovernance must be called first")
     })
 
     it("Reverts when accepting governance when called by other than pendingGovernance", async () => {
@@ -400,9 +400,7 @@ describe("Token", () => {
       expect(await saddleToken.pendingGovernance()).to.be.eq(deployerAddress)
       await expect(
         saddleToken.connect(signers[13]).acceptGovernance(),
-      ).to.be.revertedWith(
-        "SADDLE: only pendingGovernance can accept this role",
-      )
+      ).to.be.revertedWith("only pendingGovernance can accept this role")
     })
   })
 
@@ -447,7 +445,7 @@ describe("Token", () => {
         saddleToken
           .connect(deployer)
           .rescueTokens(ZERO_ADDRESS, deployerAddress, 0),
-      ).to.be.revertedWith("SADDLE: only governance can perform this action")
+      ).to.be.revertedWith("only governance can perform this action")
     })
   })
 })

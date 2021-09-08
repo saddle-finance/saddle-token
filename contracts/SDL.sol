@@ -10,11 +10,11 @@ import "./Vesting.sol";
 import "./SimpleGovernance.sol";
 
 /**
- * @title Saddle token
+ * @title Saddle DAO token
  * @notice A token that is deployed with fixed amount and appropriate vesting contracts.
  * Transfer is blocked for a period of time until the governance can toggle the transferability.
  */
-contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
+contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     using SafeERC20 for IERC20;
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
@@ -34,7 +34,7 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
     }
 
     /**
-     * @dev Initializes SADDLE token with specified governance address and recipients. For vesting
+     * @dev Initializes SDL token with specified governance address and recipients. For vesting
      * durations and amounts, please refer to our documentation on token distribution schedule.
      * @param _governance address of the governance who will own this contract
      * @param _pausePeriod time in seconds until since deployment this token can be unpaused by the governance
@@ -47,11 +47,8 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
         uint256 _pausePeriod,
         Recipient[] memory _recipients,
         address _vestingContractTarget
-    ) public ERC20("Saddle", "SADDLE") ERC20Permit("Saddle") {
-        require(
-            _governance != address(0),
-            "SADDLE: governance cannot be empty"
-        );
+    ) public ERC20("Saddle DAO", "SDL") ERC20Permit("Saddle DAO") {
+        require(_governance != address(0), "SDL: governance cannot be empty");
         governance = _governance;
         allowedTransferee[_governance] = true;
 
@@ -83,7 +80,7 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
         }
 
         // Check all tokens are minted after deployment
-        require(totalSupply() == MAX_SUPPLY, "SADDLE: incorrect mint amount");
+        require(totalSupply() == MAX_SUPPLY, "SDL: incorrect mint amount");
         emit SetGovernance(_governance);
     }
 
@@ -93,13 +90,13 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
      * transfer this token.
      */
     function enableTransfer() external {
-        require(paused(), "SADDLE: transfer is enabled");
+        require(paused(), "SDL: transfer is enabled");
         uint256 unpauseAfter = msg.sender == governance
             ? govCanUnpauseAfter
             : anyoneCanUnpauseAfter;
         require(
             block.timestamp > unpauseAfter,
-            "SADDLE: cannot enable transfer yet"
+            "SDL: cannot enable transfer yet"
         );
         _unpause();
     }
@@ -140,9 +137,9 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
         super._beforeTokenTransfer(from, to, amount);
         require(
             !paused() || allowedTransferee[from] || allowedTransferee[to],
-            "SADDLE: paused"
+            "SDL: paused"
         );
-        require(to != address(this), "SADDLE: invalid recipient");
+        require(to != address(this), "SDL: invalid recipient");
     }
 
     /**
@@ -157,7 +154,7 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
         address payable to,
         uint256 balance
     ) external onlyGovernance {
-        require(to != address(0), "SADDLE: invalid recipient");
+        require(to != address(0), "SDL: invalid recipient");
 
         if (token == IERC20(address(0))) {
             // for Ether
@@ -167,14 +164,14 @@ contract SADDLE is ERC20Permit, Pausable, SimpleGovernance {
                 : Math.min(totalBalance, balance);
             // slither-disable-next-line arbitrary-send
             (bool success, ) = to.call{value: balance}("");
-            require(success, "SADDLE: ETH transfer failed");
+            require(success, "SDL: ETH transfer failed");
         } else {
             // any other erc20
             uint256 totalBalance = token.balanceOf(address(this));
             balance = balance == 0
                 ? totalBalance
                 : Math.min(totalBalance, balance);
-            require(balance > 0, "SADDLE: trying to send 0 balance");
+            require(balance > 0, "SDL: trying to send 0 balance");
             token.safeTransfer(to, balance);
         }
     }
