@@ -171,11 +171,3 @@ export async function asyncForEach<T>(
     await callback(array[index], index)
   }
 }
-
-export async function getDeployedContractByName(
-  deployments: DeploymentsExtension,
-  name: string,
-): Promise<Contract> {
-  const deployment = await deployments.get(name)
-  return ethers.getContractAt(deployment.abi, deployment.address)
-}

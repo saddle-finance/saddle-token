@@ -1,6 +1,5 @@
 import {
   getCurrentBlockTimestamp,
-  getDeployedContractByName,
   setNextTimestamp,
   setTimestamp,
   ZERO_ADDRESS,
@@ -68,8 +67,7 @@ describe("Retroactive Vesting", () => {
         from: deployerAddress,
       })
 
-      dummyToken = (await getDeployedContractByName(
-        deployments,
+      dummyToken = (await ethers.getContract(
         "DummyToken",
       )) as GenericERC20WithGovernance
 
@@ -81,8 +79,7 @@ describe("Retroactive Vesting", () => {
         log: true,
       })
 
-      retroactiveVesting = (await getDeployedContractByName(
-        deployments,
+      retroactiveVesting = (await ethers.getContract(
         "RetroactiveVesting",
       )) as RetroactiveVesting
 
