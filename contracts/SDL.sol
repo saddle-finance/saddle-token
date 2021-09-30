@@ -49,6 +49,10 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         address _vestingContractTarget
     ) public ERC20("Saddle DAO", "SDL") ERC20Permit("Saddle DAO") {
         require(_governance != address(0), "SDL: governance cannot be empty");
+        require(
+            _pausePeriod > 0 && _pausePeriod <= 52 weeks,
+            "SDL: pausePeriod must be in between 0 and 52 weeks"
+        );
         governance = _governance;
         allowedTransferee[_governance] = true;
 
@@ -75,9 +79,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
 
         govCanUnpauseAfter = block.timestamp + _pausePeriod;
         anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
-        if (_pausePeriod > 0) {
-            _pause();
-        }
+        _pause();
 
         // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SDL: incorrect mint amount");
