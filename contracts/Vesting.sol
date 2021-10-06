@@ -120,13 +120,17 @@ contract Vesting is Initializable, Context {
             return token.balanceOf(address(this));
         } else {
             uint256 currentBalance = token.balanceOf(address(this));
-            uint256 totalBalance = currentBalance + released;
 
+            // If there are no tokens in this contract, return 0.
+            if (currentBalance == 0) {
+                return 0;
+            }
+
+            uint256 totalBalance = currentBalance + released;
             uint256 vested = (totalBalance * elapsedTime) / durationInSeconds;
             uint256 unreleased = vested - released;
 
-            // currentBalance can be 0 in case of vesting being revoked earlier.
-            return Math.min(currentBalance, unreleased);
+            return unreleased;
         }
     }
 
