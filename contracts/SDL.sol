@@ -143,8 +143,8 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     }
 
     /**
-     * @notice Transfers stuck tokens or ether out to the given destination.
-     * @dev Method to claim junk and accidentally sent tokens
+     * @notice Transfers any stuck tokens or ether out to the given destination.
+     * @dev Method to claim junk and accidentally sent tokens.
      * @param token Address of the ERC20 token to transfer out. Set to address(0) to transfer ether instead.
      * @param to Destination address that will receive the tokens.
      * @param balance Amount to transfer out. Set to 0 to select all available amount.
