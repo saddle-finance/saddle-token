@@ -8,7 +8,7 @@ abstract contract SimpleGovernance is Context {
     address public governance;
     address public pendingGovernance;
 
-    event SetGovernance(address governance);
+    event SetGovernance(address indexed governance);
 
     /**
      * @notice Changes governance of this contract

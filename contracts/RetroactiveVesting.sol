@@ -19,7 +19,7 @@ contract RetroactiveVesting {
         uint120 released;
     }
 
-    event Claimed(address account, uint256 amount);
+    event Claimed(address indexed account, uint256 amount);
 
     IERC20 public immutable TOKEN;
     bytes32 public immutable MERKLE_ROOT;

@@ -23,8 +23,8 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     uint256 public immutable anyoneCanUnpauseAfter;
     mapping(address => bool) public allowedTransferee;
 
-    event Allowed(address target);
-    event Disallowed(address target);
+    event Allowed(address indexed target);
+    event Disallowed(address indexed target);
 
     struct Recipient {
         address to;
