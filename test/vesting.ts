@@ -140,6 +140,20 @@ describe("Vesting", () => {
       await setTimestamp(startTimestamp.add(7200))
       expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
     })
+
+    it("Successfully returns 0 when there are no more tokens left in the contract", async () => {
+      const startTimestamp = await vestingClone.startTimestamp()
+
+      // After Duration is over
+      await setTimestamp(startTimestamp.add(7200))
+      expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
+
+      // Claims everything
+      await vestingClone.connect(beneficiary).release()
+
+      // vestedAmount should return 0 since the contract is empty
+      expect(await vestingClone.vestedAmount()).to.eq(0)
+    })
   })
 
   describe("release", () => {
