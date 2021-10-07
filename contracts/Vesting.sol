@@ -105,10 +105,6 @@ contract Vesting is Initializable, Context {
      */
     function vestedAmount() public view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
-        if (blockTimestamp < startTimestamp) {
-            return 0;
-        }
-
         uint256 elapsedTime = blockTimestamp - startTimestamp;
 
         if (elapsedTime < cliffInSeconds) {
