@@ -39,9 +39,9 @@ contract RetroactiveVesting {
         bytes32 merkleRoot_,
         uint256 startTimestamp_
     ) public {
-        require(token_ != address(0), "token cannot be empty");
-        require(merkleRoot_[0] != 0, "merkleRoot cannot be empty");
-        require(startTimestamp_ != 0, "startTimestamp cannot be 0");
+        require(address(token_) != address(0), "token_ cannot be empty");
+        require(merkleRoot_[0] != 0, "merkleRoot_ cannot be empty");
+        require(startTimestamp_ != 0, "startTimestamp_ cannot be 0");
 
         TOKEN = token_;
         MERKLE_ROOT = merkleRoot_;
