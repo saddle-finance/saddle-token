@@ -2,6 +2,7 @@ import {
   BIG_NUMBER_1E18,
   BIG_NUMBER_ZERO,
   getCurrentBlockTimestamp,
+  MAX_UINT256,
   setTimestamp,
   ZERO_ADDRESS,
 } from "./testUtils"
@@ -12,7 +13,6 @@ import { SDL, Vesting } from "../build/typechain/"
 import { BigNumber, Signer } from "ethers"
 import chai from "chai"
 import { DeployResult } from "hardhat-deploy/dist/types"
-import { id } from "ethers/lib/utils"
 
 chai.use(solidity)
 const { expect } = chai
@@ -48,7 +48,7 @@ describe("Token", () => {
       governanceAddress = await governance.getAddress()
 
       // Signers [10, 11, 12] are vested, [13, 14] are not vested
-      const recipients: Recipient[] = [
+      const vestingRecipients: Recipient[] = [
         {
           to: await signers[10].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
@@ -67,33 +67,25 @@ describe("Token", () => {
           cliffPeriod: BigNumber.from(3600),
           durationPeriod: BigNumber.from(7200),
         },
+      ]
+
+      const nonVestingRecipients = [
         {
           to: await signers[13].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
-          cliffPeriod: BIG_NUMBER_ZERO,
-          durationPeriod: BIG_NUMBER_ZERO,
         },
         {
           to: await signers[14].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
-          cliffPeriod: BIG_NUMBER_ZERO,
-          durationPeriod: BIG_NUMBER_ZERO,
         },
       ]
-
-      // Check the recipients params
-      let totalMintedAmount = BIG_NUMBER_ZERO
-      for (const recipient of recipients) {
-        totalMintedAmount = totalMintedAmount.add(recipient.amount)
-      }
-      expect(totalMintedAmount).to.eq(BIG_NUMBER_1E18.mul(1e9))
 
       vesting = await ethers.getContract("Vesting")
 
       // Calculate deterministic deployment address
       const determinedDeployment = await deterministic("SDL", {
         from: deployerAddress,
-        args: [governanceAddress, PAUSE_PERIOD, recipients, vesting.address],
+        args: [governanceAddress, PAUSE_PERIOD, vesting.address],
         log: true,
       })
 
@@ -107,25 +99,48 @@ describe("Token", () => {
 
       // Deploy the token contract
       const deployResult: DeployResult = await determinedDeployment.deploy()
+      startTimestamp = await getCurrentBlockTimestamp()
 
       console.log(`Gas used to deploy token: ${deployResult.receipt?.gasUsed}`)
 
-      // Find the newly deployed vesting contract proxies via logs
-      const vestingInitLogs = deployResult.receipt?.logs?.filter(
-        (log) =>
-          log.topics[0] === id("VestingInitialized(address,uint256,uint256)"),
-      )
+      // Find the saddle token deployment
+      saddleToken = await ethers.getContract("SDL")
 
-      if (vestingInitLogs) {
-        for (const log of vestingInitLogs) {
-          vestingContracts.push(
-            (await ethers.getContractAt("Vesting", log.address)) as Vesting,
-          )
-        }
+      // Approve the token usage for deploying vesting contracts
+      await saddleToken
+        .connect(governance)
+        .approve(saddleToken.address, MAX_UINT256)
+
+      // Call `deployNewVestingContract` for each vesting recipient
+      for (const vestingReciepient of vestingRecipients) {
+        // Preview the address
+        const cloneAddress = await saddleToken
+          .connect(governance)
+          .callStatic.deployNewVestingContract(vestingReciepient)
+
+        // Push the address to vesting contracts array
+        vestingContracts.push(
+          (await ethers.getContractAt("Vesting", cloneAddress)) as Vesting,
+        )
+
+        await saddleToken
+          .connect(governance)
+          .deployNewVestingContract(vestingReciepient)
       }
 
-      startTimestamp = await getCurrentBlockTimestamp()
-      saddleToken = await ethers.getContract("SDL")
+      // Send the token to addresses without vesting
+      const approvedTransferees = []
+      for (const nonVestingRecipient of nonVestingRecipients) {
+        await saddleToken
+          .connect(governance)
+          .transfer(nonVestingRecipient.to, nonVestingRecipient.amount)
+        approvedTransferees.push(nonVestingRecipient.to)
+      }
+
+      // Let those addresses transfer the token
+      await saddleToken
+        .connect(governance)
+        .addToAllowedList(approvedTransferees)
     },
   )
 

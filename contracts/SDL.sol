@@ -23,6 +23,8 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     uint256 public immutable anyoneCanUnpauseAfter;
     mapping(address => bool) public allowedTransferee;
 
+    address public immutable vestingContractTarget;
+
     event Allowed(address target);
     event Disallowed(address target);
 
@@ -34,54 +36,83 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     }
 
     /**
-     * @dev Initializes SDL token with specified governance address and recipients. For vesting
+     * @notice Initializes SDL token with specified governance address and recipients. For vesting
      * durations and amounts, please refer to our documentation on token distribution schedule.
      * @param _governance address of the governance who will own this contract
      * @param _pausePeriod time in seconds until since deployment this token can be unpaused by the governance
-     * @param _recipients recipients of the token at deployment. Addresses that are subject to vesting are vested according
-     * to the token distribution schedule.
      * @param _vestingContractTarget logic contract of Vesting.sol to use for cloning
      */
     constructor(
         address _governance,
         uint256 _pausePeriod,
-        Recipient[] memory _recipients,
         address _vestingContractTarget
     ) public ERC20("Saddle DAO", "SDL") ERC20Permit("Saddle DAO") {
         require(_governance != address(0), "SDL: governance cannot be empty");
+        require(
+            _vestingContractTarget != address(0),
+            "SDL: vesting contract target cannot be empty"
+        );
+
+        // Set state variables
+        vestingContractTarget = _vestingContractTarget;
         governance = _governance;
-        allowedTransferee[_governance] = true;
-
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            address to = _recipients[i].to;
-            if (_recipients[i].durationPeriod != 0) {
-                // If the recipients require vesting, deploy a clone of Vesting.sol
-                Vesting vestingContract = Vesting(
-                    Clones.clone(_vestingContractTarget)
-                );
-                // Initializes clone contracts
-                vestingContract.initialize(
-                    address(this),
-                    to,
-                    _recipients[i].cliffPeriod,
-                    _recipients[i].durationPeriod
-                );
-                to = address(vestingContract);
-            }
-            _mint(to, _recipients[i].amount);
-            allowedTransferee[to] = true;
-            emit Allowed(to);
-        }
-
         govCanUnpauseAfter = block.timestamp + _pausePeriod;
         anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
+
+        // Pause transfers at deployment
         if (_pausePeriod > 0) {
             _pause();
         }
 
-        // Check all tokens are minted after deployment
-        require(totalSupply() == MAX_SUPPLY, "SDL: incorrect mint amount");
+        // Allow governance to transfer tokens
+        allowedTransferee[_governance] = true;
+
+        // Mint tokens to governance
+        _mint(governance, MAX_SUPPLY);
         emit SetGovernance(_governance);
+    }
+
+    /**
+     * @notice Deploys a clone of the vesting contract for the given recipient. Details about vesting and token
+     * release schedule can be found on https://docs.saddle.finance
+     * @param recipient Recipient of the token through the vesting schedule.
+     */
+    function deployNewVestingContract(Recipient memory recipient)
+        public
+        onlyGovernance
+        returns (address)
+    {
+        require(
+            recipient.durationPeriod > 0,
+            "SDL: duration for vesting cannot be 0"
+        );
+
+        // Get the token from msg.sender
+        uint256 amount = recipient.amount;
+
+        // Deploy a clone rather than deploying a whole new contract
+        Vesting vestingContract = Vesting(Clones.clone(vestingContractTarget));
+
+        // Initialize the clone contract for the recipient
+        vestingContract.initialize(
+            address(this),
+            recipient.to,
+            recipient.cliffPeriod,
+            recipient.durationPeriod
+        );
+
+        // Send tokens to the contract
+        IERC20(address(this)).safeTransferFrom(
+            msg.sender,
+            address(vestingContract),
+            amount
+        );
+
+        // Add the vesting contracts to the allowed transferee list
+        allowedTransferee[address(vestingContract)] = true;
+        emit Allowed(address(vestingContract));
+
+        return address(vestingContract);
     }
 
     /**
