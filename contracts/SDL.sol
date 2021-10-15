@@ -27,6 +27,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
 
     event Allowed(address target);
     event Disallowed(address target);
+    event VestingContractDeployed(address indexed beneficiary, address vestingContract);
 
     struct Recipient {
         address to;
@@ -59,16 +60,17 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         govCanUnpauseAfter = block.timestamp + _pausePeriod;
         anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
 
-        // Pause transfers at deployment
-        if (_pausePeriod > 0) {
-            _pause();
-        }
-
         // Allow governance to transfer tokens
         allowedTransferee[_governance] = true;
 
         // Mint tokens to governance
         _mint(governance, MAX_SUPPLY);
+
+        // Pause transfers at deployment
+        if (_pausePeriod > 0) {
+            _pause();
+        }
+
         emit SetGovernance(_governance);
     }
 
@@ -87,9 +89,6 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
             "SDL: duration for vesting cannot be 0"
         );
 
-        // Get the token from msg.sender
-        uint256 amount = recipient.amount;
-
         // Deploy a clone rather than deploying a whole new contract
         Vesting vestingContract = Vesting(Clones.clone(vestingContractTarget));
 
@@ -105,12 +104,13 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         IERC20(address(this)).safeTransferFrom(
             msg.sender,
             address(vestingContract),
-            amount
+            recipient.amount
         );
 
-        // Add the vesting contracts to the allowed transferee list
+        // Add the vesting contract to the allowed transferee list
         allowedTransferee[address(vestingContract)] = true;
         emit Allowed(address(vestingContract));
+        emit VestingContractDeployed(recipient.to, address(vestingContract));
 
         return address(vestingContract);
     }
