@@ -11,8 +11,8 @@ import "./SimpleGovernance.sol";
 /**
  * @title Vesting
  * @dev A token holder contract that can release its token balance gradually like a
- * typical vesting scheme, with a cliff and vesting period. Optionally revocable by the
- * owner.
+ * typical vesting scheme, with a cliff and vesting period. Owner has the power
+ * to change the beneficiary who receives the vested tokens.
  */
 contract Vesting is Initializable, Context {
     using SafeERC20 for IERC20;
@@ -68,8 +68,11 @@ contract Vesting is Initializable, Context {
         uint256 _cliffInSeconds,
         uint256 _durationInSeconds
     ) external initializer {
+        require(_token != address(0), "_token cannot be empty");
+        // dev: beneficiary is set to msg.sender on logic contracts during deployment
         require(beneficiary == address(0), "cannot initialize logic contract");
-        require(_beneficiary != address(0), "beneficiary cannot be empty");
+        require(_beneficiary != address(0), "_beneficiary cannot be empty");
+        require(_durationInSeconds != 0, "duration cannot be 0");
         require(
             _cliffInSeconds <= _durationInSeconds,
             "cliff is greater than duration"
@@ -120,13 +123,17 @@ contract Vesting is Initializable, Context {
             return token.balanceOf(address(this));
         } else {
             uint256 currentBalance = token.balanceOf(address(this));
-            uint256 totalBalance = currentBalance + released;
 
+            // If there are no tokens in this contract yet, return 0.
+            if (currentBalance == 0) {
+                return 0;
+            }
+
+            uint256 totalBalance = currentBalance + released;
             uint256 vested = (totalBalance * elapsedTime) / durationInSeconds;
             uint256 unreleased = vested - released;
 
-            // currentBalance can be 0 in case of vesting being revoked earlier.
-            return Math.min(currentBalance, unreleased);
+            return unreleased;
         }
     }
 
@@ -138,6 +145,10 @@ contract Vesting is Initializable, Context {
      * @param newBeneficiary new address to become the beneficiary
      */
     function changeBeneficiary(address newBeneficiary) external onlyGovernance {
+        require(
+            newBeneficiary != beneficiary,
+            "beneficiary must be different from current one"
+        );
         require(newBeneficiary != address(0), "beneficiary cannot be empty");
         beneficiary = newBeneficiary;
         emit SetBeneficiary(newBeneficiary);

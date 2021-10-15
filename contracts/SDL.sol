@@ -49,6 +49,10 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         address _vestingContractTarget
     ) public ERC20("Saddle DAO", "SDL") ERC20Permit("Saddle DAO") {
         require(_governance != address(0), "SDL: governance cannot be empty");
+        require(
+            _pausePeriod > 0 && _pausePeriod <= 52 weeks,
+            "SDL: pausePeriod must be in between 0 and 52 weeks"
+        );
         governance = _governance;
         allowedTransferee[_governance] = true;
 
@@ -75,9 +79,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
 
         govCanUnpauseAfter = block.timestamp + _pausePeriod;
         anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
-        if (_pausePeriod > 0) {
-            _pause();
-        }
+        _pause();
 
         // Check all tokens are minted after deployment
         require(totalSupply() == MAX_SUPPLY, "SDL: incorrect mint amount");
@@ -103,6 +105,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
 
     /**
      * @notice Add the given addresses to the list of allowed addresses that can transfer during paused period.
+     * Governance will add auxiliary contracts to the allowed list to facilitate distribution during the paused period.
      * @param targets Array of addresses to add
      */
     function addToAllowedList(address[] memory targets)
@@ -143,8 +146,9 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     }
 
     /**
-     * @notice Transfers stuck tokens or ether out to the given destination.
-     * @dev Method to claim junk and accidentally sent tokens
+     * @notice Transfers any stuck tokens or ether out to the given destination.
+     * @dev Method to claim junk and accidentally sent tokens. This will be only used to rescue
+     * tokens that are mistakenly sent by users to this contract.
      * @param token Address of the ERC20 token to transfer out. Set to address(0) to transfer ether instead.
      * @param to Destination address that will receive the tokens.
      * @param balance Amount to transfer out. Set to 0 to select all available amount.
@@ -162,6 +166,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
             balance = balance == 0
                 ? totalBalance
                 : Math.min(totalBalance, balance);
+            require(balance > 0, "SDL: trying to send 0 ETH");
             // slither-disable-next-line arbitrary-send
             (bool success, ) = to.call{value: balance}("");
             require(success, "SDL: ETH transfer failed");
