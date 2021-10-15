@@ -11,8 +11,8 @@ import "./SimpleGovernance.sol";
 /**
  * @title Vesting
  * @dev A token holder contract that can release its token balance gradually like a
- * typical vesting scheme, with a cliff and vesting period. Optionally revocable by the
- * owner.
+ * typical vesting scheme, with a cliff and vesting period. Owner has the power
+ * to change the beneficiary who receives the vested tokens.
  */
 contract Vesting is Initializable, Context {
     using SafeERC20 for IERC20;
@@ -128,7 +128,6 @@ contract Vesting is Initializable, Context {
             uint256 vested = (totalBalance * elapsedTime) / durationInSeconds;
             uint256 unreleased = vested - released;
 
-            // currentBalance can be 0 in case of vesting being revoked earlier.
             return Math.min(currentBalance, unreleased);
         }
     }

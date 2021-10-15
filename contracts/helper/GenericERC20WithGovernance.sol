@@ -8,7 +8,8 @@ import "../SimpleGovernance.sol";
 
 /**
  * @title Generic ERC20 token
- * @notice This contract simulates a generic ERC20 token that is mintable and burnable.
+ * @notice This contract simulates a generic ERC20 token that is mintable by an owner.
+ * @dev This is only for testing the vesting contracts and will not be used in production.
  */
 contract GenericERC20WithGovernance is ERC20, Ownable, SimpleGovernance {
     uint8 private _decimals;

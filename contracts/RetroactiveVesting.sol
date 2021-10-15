@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 /**
  * @title RetroactiveVesting
  * @notice A token holder contract that can release its token balance linearly over
- * the vesting period. Respective address and the amount are included in each merkle node.
+ * the vesting period of 2 years. Respective address and the amount are included in each merkle node.
  */
 contract RetroactiveVesting {
     using SafeERC20 for IERC20;
@@ -21,15 +21,21 @@ contract RetroactiveVesting {
 
     event Claimed(address account, uint256 amount);
 
+    // Address of the token that is subject to vesting
     IERC20 public immutable TOKEN;
+    // Merkle root used to verify the beneficiary address and the amount of the tokens
     bytes32 public immutable MERKLE_ROOT;
+    // Epoch unix timestamp in seconds when the vesting starts to decay
     uint256 public immutable START_TIMESTAMP;
+    // Vesting period of 2 years
     uint256 public constant DURATION = 2 * (52 weeks);
 
     mapping(address => VestingData) public vestings;
 
     /**
      * @notice Deploys this contract with given parameters
+     * @dev The information about the method used to generate the merkle root and how to replicate it
+     * can be found on https://docs.saddle.finance.
      * @param token_ Address of the token that will be vested
      * @param merkleRoot_ Bytes of the merkle root node which is generated off chain.
      * @param startTimestamp_ Timestamp in seconds when to start vesting. This can be backdated as well.
@@ -101,7 +107,12 @@ contract RetroactiveVesting {
             START_TIMESTAMP,
             DURATION
         );
-        vesting.released = uint120(amount + released);
+        uint256 newReleased = amount + released;
+        require(
+            newReleased < type(uint120).max,
+            "newReleased is too big to be cast uint120"
+        );
+        vesting.released = uint120(newReleased);
         TOKEN.safeTransfer(account, amount);
 
         emit Claimed(account, amount);
