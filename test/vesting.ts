@@ -117,42 +117,60 @@ describe("Vesting", () => {
         3600,
         7200,
       )
-      await dummyToken.transfer(vestingClone.address, totalVestedAmount)
     })
 
-    it("Successfully calculates the vested amounts", async () => {
-      const startTimestamp = await vestingClone.startTimestamp()
-
-      // Before Cliff is reached
-      expect(await vestingClone.vestedAmount()).to.eq(0)
-      await setTimestamp(startTimestamp.add(1800))
-      expect(await vestingClone.vestedAmount()).to.eq(0)
-
-      // After Cliff is reached
-      await setTimestamp(startTimestamp.add(3600))
-      expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount.div(2))
-      await setTimestamp(startTimestamp.add(5400))
-      expect(await vestingClone.vestedAmount()).to.eq(
-        totalVestedAmount.mul(3).div(4),
-      )
-
-      // After Duration is over
-      await setTimestamp(startTimestamp.add(7200))
-      expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
+    describe("contract is initialized but NOT filled with tokens", () => {
+      it("Successfully returns 0 when contract is empty", async () => {
+        // vestedAmount should return 0 since the contract is empty
+        expect(await vestingClone.vestedAmount()).to.eq(0)
+        await expect(
+          vestingClone.connect(beneficiary).release(),
+        ).to.be.revertedWith("No tokens to release")
+      })
     })
 
-    it("Successfully returns 0 when there are no more tokens left in the contract", async () => {
-      const startTimestamp = await vestingClone.startTimestamp()
+    describe("contract is initialized and filled with some tokens", () => {
+      // Fill the contact with some tokens
+      beforeEach(async () => {
+        await dummyToken.transfer(vestingClone.address, totalVestedAmount)
+      })
 
-      // After Duration is over
-      await setTimestamp(startTimestamp.add(7200))
-      expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
+      it("Successfully calculates the vested amounts", async () => {
+        const startTimestamp = await vestingClone.startTimestamp()
 
-      // Claims everything
-      await vestingClone.connect(beneficiary).release()
+        // Before Cliff is reached
+        expect(await vestingClone.vestedAmount()).to.eq(0)
+        await setTimestamp(startTimestamp.add(1800))
+        expect(await vestingClone.vestedAmount()).to.eq(0)
 
-      // vestedAmount should return 0 since the contract is empty
-      expect(await vestingClone.vestedAmount()).to.eq(0)
+        // After Cliff is reached
+        await setTimestamp(startTimestamp.add(3600))
+        expect(await vestingClone.vestedAmount()).to.eq(
+          totalVestedAmount.div(2),
+        )
+        await setTimestamp(startTimestamp.add(5400))
+        expect(await vestingClone.vestedAmount()).to.eq(
+          totalVestedAmount.mul(3).div(4),
+        )
+
+        // After Duration is over
+        await setTimestamp(startTimestamp.add(7200))
+        expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
+      })
+
+      it("Successfully returns 0 when there are no more tokens left in the contract", async () => {
+        const startTimestamp = await vestingClone.startTimestamp()
+
+        // After Duration is over
+        await setTimestamp(startTimestamp.add(7200))
+        expect(await vestingClone.vestedAmount()).to.eq(totalVestedAmount)
+
+        // Claims everything
+        await vestingClone.connect(beneficiary).release()
+
+        // vestedAmount should return 0 since the contract is empty
+        expect(await vestingClone.vestedAmount()).to.eq(0)
+      })
     })
   })
 

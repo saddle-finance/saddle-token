@@ -121,7 +121,7 @@ contract Vesting is Initializable, Context {
         } else {
             uint256 currentBalance = token.balanceOf(address(this));
 
-            // If there are no tokens in this contract, return 0.
+            // If there are no tokens in this contract yet, return 0.
             if (currentBalance == 0) {
                 return 0;
             }
