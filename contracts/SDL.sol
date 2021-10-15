@@ -27,7 +27,10 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
 
     event Allowed(address target);
     event Disallowed(address target);
-    event VestingContractDeployed(address indexed beneficiary, address vestingContract);
+    event VestingContractDeployed(
+        address indexed beneficiary,
+        address vestingContract
+    );
 
     struct Recipient {
         address to;
