@@ -34,6 +34,8 @@ contract RetroactiveVesting {
 
     /**
      * @notice Deploys this contract with given parameters
+     * @dev The information about the method used to generate the merkle root and how to replicate it
+     * can be found on https://docs.saddle.finance.
      * @param token_ Address of the token that will be vested
      * @param merkleRoot_ Bytes of the merkle root node which is generated off chain.
      * @param startTimestamp_ Timestamp in seconds when to start vesting. This can be backdated as well.
