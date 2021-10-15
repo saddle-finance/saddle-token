@@ -162,6 +162,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
             balance = balance == 0
                 ? totalBalance
                 : Math.min(totalBalance, balance);
+            require(balance > 0, "SDL: trying to send 0 ETH");
             // slither-disable-next-line arbitrary-send
             (bool success, ) = to.call{value: balance}("");
             require(success, "SDL: ETH transfer failed");
