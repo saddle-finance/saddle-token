@@ -62,7 +62,7 @@ contract RetroactiveVesting {
     ) external {
         require(
             totalAmount > 0 && totalAmount < type(uint120).max,
-            "totalAmount cannot be 0 or larger than total supply"
+            "totalAmount cannot be 0 or larger than max uint120 value"
         );
         VestingData storage vesting = vestings[account];
         if (!vesting.isVerified) {
