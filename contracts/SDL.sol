@@ -138,10 +138,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         uint256 amount
     ) internal override {
         super._beforeTokenTransfer(from, to, amount);
-        require(
-            !paused() || allowedTransferee[from] || allowedTransferee[to],
-            "SDL: paused"
-        );
+        require(!paused() || allowedTransferee[from], "SDL: paused");
         require(to != address(this), "SDL: invalid recipient");
     }
 

@@ -203,17 +203,16 @@ describe("Token", () => {
       )
     })
 
-    it("Successfully transfers from a not-allowed address to an allowed address when paused", async () => {
+    it("Reverts when transfers from a not-allowed address to an allowed address when paused", async () => {
       await saddleToken
         .connect(signers[13])
         .transfer(deployerAddress, BIG_NUMBER_1E18.mul(1e8))
-      await saddleToken.transfer(
-        await signers[13].getAddress(),
-        BIG_NUMBER_1E18.mul(1e8),
-      )
-      expect(await saddleToken.balanceOf(deployerAddress)).to.eq(
-        BIG_NUMBER_ZERO,
-      )
+      await expect(
+        saddleToken.transfer(
+          await signers[13].getAddress(),
+          BIG_NUMBER_1E18.mul(1e8),
+        ),
+      ).to.be.revertedWith("SDL: paused")
     })
 
     it("Reverts when transfers between not-allowed addresses when paused", async () => {
