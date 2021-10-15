@@ -123,6 +123,12 @@ describe("Vesting", () => {
       it("Successfully returns 0 when contract is empty", async () => {
         // vestedAmount should return 0 since the contract is empty
         expect(await vestingClone.vestedAmount()).to.eq(0)
+
+        // Let some time pass by so the vesting calculation starts
+        const startTimestamp = await vestingClone.startTimestamp()
+        await setTimestamp(startTimestamp.add(3600))
+
+        // The contract is still not filled with tokens. Below call should be reverted.
         await expect(
           vestingClone.connect(beneficiary).release(),
         ).to.be.revertedWith("No tokens to release")
