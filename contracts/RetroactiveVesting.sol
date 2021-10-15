@@ -97,7 +97,12 @@ contract RetroactiveVesting {
             START_TIMESTAMP,
             DURATION
         );
-        vesting.released = uint120(amount + released);
+        uint256 newReleased = amount + released;
+        require(
+            newReleased < type(uint120).max,
+            "newReleased is too big to be cast uint120"
+        );
+        vesting.released = uint120(newReleased);
         TOKEN.safeTransfer(account, amount);
 
         emit Claimed(account, amount);
