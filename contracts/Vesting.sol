@@ -68,8 +68,11 @@ contract Vesting is Initializable, Context {
         uint256 _cliffInSeconds,
         uint256 _durationInSeconds
     ) external initializer {
+        require(_token != address(0), "_token cannot be empty");
+        // dev: beneficiary is set to msg.sender on logic contracts during deployment
         require(beneficiary == address(0), "cannot initialize logic contract");
-        require(_beneficiary != address(0), "beneficiary cannot be empty");
+        require(_beneficiary != address(0), "_beneficiary cannot be empty");
+        require(_durationInSeconds != 0, "duration cannot be 0");
         require(
             _cliffInSeconds <= _durationInSeconds,
             "cliff is greater than duration"
@@ -135,6 +138,10 @@ contract Vesting is Initializable, Context {
      * @param newBeneficiary new address to become the beneficiary
      */
     function changeBeneficiary(address newBeneficiary) external onlyGovernance {
+        require(
+            newBeneficiary != beneficiary,
+            "beneficiary must be different from current one"
+        );
         require(newBeneficiary != address(0), "beneficiary cannot be empty");
         beneficiary = newBeneficiary;
         emit SetBeneficiary(newBeneficiary);

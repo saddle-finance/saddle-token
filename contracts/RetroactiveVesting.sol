@@ -45,6 +45,10 @@ contract RetroactiveVesting {
         bytes32 merkleRoot_,
         uint256 startTimestamp_
     ) public {
+        require(address(token_) != address(0), "token_ cannot be empty");
+        require(merkleRoot_[0] != 0, "merkleRoot_ cannot be empty");
+        require(startTimestamp_ != 0, "startTimestamp_ cannot be 0");
+
         TOKEN = token_;
         MERKLE_ROOT = merkleRoot_;
         START_TIMESTAMP = startTimestamp_;
@@ -62,6 +66,10 @@ contract RetroactiveVesting {
         uint256 totalAmount,
         bytes32[] calldata merkleProof
     ) external {
+        require(
+            totalAmount > 0 && totalAmount < type(uint120).max,
+            "totalAmount cannot be 0 or larger than max uint120 value"
+        );
         VestingData storage vesting = vestings[account];
         if (!vesting.isVerified) {
             // Verify the merkle proof.
