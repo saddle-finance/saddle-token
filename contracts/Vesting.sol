@@ -140,8 +140,8 @@ contract Vesting is Initializable, Context {
     /**
      * @notice Changes beneficiary who receives the vested token.
      * @dev Only governance can call this function. This is to be used in case the target address
-     * needs to be updated. If the previous beneficiary did not claim any tokens, the new beneficiary
-     * will be able to claim the unclaimed portions of the vested token.
+     * needs to be updated. If the previous beneficiary has any unclaimed tokens, the new beneficiary
+     * will be able to claim them and the rest of the vested tokens.
      * @param newBeneficiary new address to become the beneficiary
      */
     function changeBeneficiary(address newBeneficiary) external onlyGovernance {
