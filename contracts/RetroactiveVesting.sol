@@ -121,7 +121,7 @@ contract RetroactiveVesting {
     /**
      * @notice Calculated the amount that has already vested but hasn't been released yet.
      * Reverts if the given account has not been verified.
-     * @param account Address to calculated the vested amount for
+     * @param account Address to calculate the vested amount for
      */
     function vestedAmount(address account) external view returns (uint256) {
         require(vestings[account].isVerified, "must verify first");

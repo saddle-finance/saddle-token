@@ -43,7 +43,8 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
      * @notice Initializes SDL token with specified governance address and recipients. For vesting
      * durations and amounts, please refer to our documentation on token distribution schedule.
      * @param _governance address of the governance who will own this contract
-     * @param _pausePeriod time in seconds until since deployment this token can be unpaused by the governance
+     * @param _pausePeriod time in seconds since the deployment. After this period, this token can be unpaused
+     * by the governance.
      * @param _vestingContractTarget logic contract of Vesting.sol to use for cloning
      */
     constructor(
