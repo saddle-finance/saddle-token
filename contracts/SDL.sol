@@ -18,12 +18,12 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     using SafeERC20 for IERC20;
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
-    uint256 constant MAX_SUPPLY = 1e9 ether;
+    uint256 public constant MAX_SUPPLY = 1e9 ether;
     uint256 public immutable govCanUnpauseAfter;
     uint256 public immutable anyoneCanUnpauseAfter;
-    mapping(address => bool) public allowedTransferee;
-
     address public immutable vestingContractTarget;
+
+    mapping(address => bool) public allowedTransferee;
 
     event Allowed(address indexed target);
     event Disallowed(address indexed target);
