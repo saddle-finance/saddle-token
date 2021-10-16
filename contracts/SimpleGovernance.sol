@@ -27,6 +27,10 @@ abstract contract SimpleGovernance is Context {
      * @param newGovernance new address to become the governance
      */
     function changeGovernance(address newGovernance) external onlyGovernance {
+        require(
+            newGovernance != governance,
+            "governance must be different from current one"
+        );
         require(newGovernance != address(0), "governance cannot be empty");
         pendingGovernance = newGovernance;
     }
