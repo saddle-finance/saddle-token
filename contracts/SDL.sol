@@ -18,15 +18,15 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     using SafeERC20 for IERC20;
 
     // Token max supply is 1,000,000,000 * 1e18 = 1e27
-    uint256 constant MAX_SUPPLY = 1e9 ether;
+    uint256 public constant MAX_SUPPLY = 1e9 ether;
     uint256 public immutable govCanUnpauseAfter;
     uint256 public immutable anyoneCanUnpauseAfter;
-    mapping(address => bool) public allowedTransferee;
-
     address public immutable vestingContractTarget;
 
-    event Allowed(address target);
-    event Disallowed(address target);
+    mapping(address => bool) public allowedTransferee;
+
+    event Allowed(address indexed target);
+    event Disallowed(address indexed target);
     event VestingContractDeployed(
         address indexed beneficiary,
         address vestingContract
@@ -42,44 +42,44 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     /**
      * @notice Initializes SDL token with specified governance address and recipients. For vesting
      * durations and amounts, please refer to our documentation on token distribution schedule.
-     * @param _governance address of the governance who will own this contract
-     * @param _pausePeriod time in seconds since the deployment. After this period, this token can be unpaused
+     * @param governance_ address of the governance who will own this contract
+     * @param pausePeriod_ time in seconds since the deployment. After this period, this token can be unpaused
      * by the governance.
-     * @param _vestingContractTarget logic contract of Vesting.sol to use for cloning
+     * @param vestingContractTarget_ logic contract of Vesting.sol to use for cloning
      */
     constructor(
-        address _governance,
-        uint256 _pausePeriod,
-        address _vestingContractTarget
+        address governance_,
+        uint256 pausePeriod_,
+        address vestingContractTarget_
     ) public ERC20("Saddle DAO", "SDL") ERC20Permit("Saddle DAO") {
-        require(_governance != address(0), "SDL: governance cannot be empty");
+        require(governance_ != address(0), "SDL: governance cannot be empty");
         require(
-            _vestingContractTarget != address(0),
+            vestingContractTarget_ != address(0),
             "SDL: vesting contract target cannot be empty"
         );
         require(
-            _pausePeriod > 0 && _pausePeriod <= 52 weeks,
+            pausePeriod_ > 0 && pausePeriod_ <= 52 weeks,
             "SDL: pausePeriod must be in between 0 and 52 weeks"
         );
 
         // Set state variables
-        vestingContractTarget = _vestingContractTarget;
-        governance = _governance;
-        govCanUnpauseAfter = block.timestamp + _pausePeriod;
+        vestingContractTarget = vestingContractTarget_;
+        governance = governance_;
+        govCanUnpauseAfter = block.timestamp + pausePeriod_;
         anyoneCanUnpauseAfter = block.timestamp + 52 weeks;
 
         // Allow governance to transfer tokens
-        allowedTransferee[_governance] = true;
+        allowedTransferee[governance_] = true;
 
         // Mint tokens to governance
         _mint(governance, MAX_SUPPLY);
 
         // Pause transfers at deployment
-        if (_pausePeriod > 0) {
+        if (pausePeriod_ > 0) {
             _pause();
         }
 
-        emit SetGovernance(_governance);
+        emit SetGovernance(governance_);
     }
 
     /**

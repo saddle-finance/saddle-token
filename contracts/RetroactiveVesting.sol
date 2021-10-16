@@ -19,14 +19,14 @@ contract RetroactiveVesting {
         uint120 released;
     }
 
-    event Claimed(address account, uint256 amount);
+    event Claimed(address indexed account, uint256 amount);
 
     // Address of the token that is subject to vesting
-    IERC20 public immutable TOKEN;
+    IERC20 public immutable token;
     // Merkle root used to verify the beneficiary address and the amount of the tokens
-    bytes32 public immutable MERKLE_ROOT;
+    bytes32 public immutable merkleRoot;
     // Epoch unix timestamp in seconds when the vesting starts to decay
-    uint256 public immutable START_TIMESTAMP;
+    uint256 public immutable startTimestamp;
     // Vesting period of 2 years
     uint256 public constant DURATION = 2 * (52 weeks);
 
@@ -49,9 +49,9 @@ contract RetroactiveVesting {
         require(merkleRoot_[0] != 0, "merkleRoot_ cannot be empty");
         require(startTimestamp_ != 0, "startTimestamp_ cannot be 0");
 
-        TOKEN = token_;
-        MERKLE_ROOT = merkleRoot_;
-        START_TIMESTAMP = startTimestamp_;
+        token = token_;
+        merkleRoot = merkleRoot_;
+        startTimestamp = startTimestamp_;
     }
 
     /**
@@ -75,7 +75,7 @@ contract RetroactiveVesting {
             // Verify the merkle proof.
             bytes32 node = keccak256(abi.encodePacked(account, totalAmount));
             require(
-                MerkleProof.verify(merkleProof, MERKLE_ROOT, node),
+                MerkleProof.verify(merkleProof, merkleRoot, node),
                 "could not verify merkleProof"
             );
             // Save the verified state
@@ -104,7 +104,7 @@ contract RetroactiveVesting {
         uint256 amount = _vestedAmount(
             vesting.totalAmount,
             released,
-            START_TIMESTAMP,
+            startTimestamp,
             DURATION
         );
         uint256 newReleased = amount + released;
@@ -113,7 +113,7 @@ contract RetroactiveVesting {
             "newReleased is too big to be cast uint120"
         );
         vesting.released = uint120(newReleased);
-        TOKEN.safeTransfer(account, amount);
+        token.safeTransfer(account, amount);
 
         emit Claimed(account, amount);
     }
@@ -129,7 +129,7 @@ contract RetroactiveVesting {
             _vestedAmount(
                 vestings[account].totalAmount,
                 vestings[account].released,
-                START_TIMESTAMP,
+                startTimestamp,
                 DURATION
             );
     }

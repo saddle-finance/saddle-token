@@ -19,11 +19,11 @@ contract Vesting is Initializable, Context {
 
     event Released(uint256 amount);
     event VestingInitialized(
-        address beneficiary,
+        address indexed beneficiary,
         uint256 cliff,
         uint256 duration
     );
-    event SetBeneficiary(address beneficiary);
+    event SetBeneficiary(address indexed beneficiary);
 
     // beneficiary of tokens after they are released
     address public beneficiary;
@@ -108,10 +108,6 @@ contract Vesting is Initializable, Context {
      */
     function vestedAmount() public view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
-        if (blockTimestamp < startTimestamp) {
-            return 0;
-        }
-
         uint256 elapsedTime = blockTimestamp - startTimestamp;
 
         if (elapsedTime < cliffInSeconds) {
