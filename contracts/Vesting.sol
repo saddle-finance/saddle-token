@@ -76,6 +76,7 @@ contract Vesting is Initializable, Context {
         require(beneficiary == address(0), "cannot initialize logic contract");
         require(_beneficiary != address(0), "_beneficiary cannot be empty");
         require(_startTimestamp != 0, "startTimestamp cannot be 0");
+        require(_startTimestamp <= block.timestamp, "startTimestamp cannot be from the future");
         require(_durationInSeconds != 0, "duration cannot be 0");
         require(
             _cliffInSeconds <= _durationInSeconds,
@@ -116,11 +117,7 @@ contract Vesting is Initializable, Context {
         uint256 _startTimestamp = startTimestamp;
         uint256 _durationInSeconds = durationInSeconds;
 
-        if (blockTimestamp < _startTimestamp) {
-            return 0;
-        }
-
-        uint256 elapsedTime = blockTimestamp - _startTimestamp;
+        uint256 elapsedTime = blockTimestamp - _startTimestamp; // @dev startTimestamp is always less than blockTimestamp
 
         if (elapsedTime < cliffInSeconds) {
             return 0;

@@ -78,7 +78,7 @@ describe("Vesting", () => {
   describe("initialize", () => {
     let startTimestamp: number
     beforeEach(async () => {
-      startTimestamp = await getCurrentBlockTimestamp()
+      startTimestamp = (await getCurrentBlockTimestamp()) - 1000
     })
 
     it("Fails to initialize the logic contract", async () => {
@@ -134,7 +134,7 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
-      const startTimestamp = await getCurrentBlockTimestamp()
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
@@ -209,7 +209,7 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
-      const startTimestamp = await getCurrentBlockTimestamp()
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
@@ -256,7 +256,7 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
-      const startTimestamp = await getCurrentBlockTimestamp()
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,

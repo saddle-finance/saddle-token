@@ -51,7 +51,7 @@ describe("Token", () => {
       // Signers [10, 11, 12] are vested, [13, 14] are not vested
       const vestingStartTimestamp = BigNumber.from(
         await getCurrentBlockTimestamp(),
-      )
+      ).sub(1000)
       const vestingRecipients: Recipient[] = [
         {
           to: await signers[10].getAddress(),
