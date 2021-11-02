@@ -117,17 +117,16 @@ contract Vesting is Initializable, Context {
      */
     function vestedAmount() public view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
-        uint256 _startTimestamp = startTimestamp;
         uint256 _durationInSeconds = durationInSeconds;
 
-        uint256 elapsedTime = blockTimestamp - _startTimestamp; // @dev startTimestamp is always less than blockTimestamp
+        uint256 elapsedTime = blockTimestamp - startTimestamp; // @dev startTimestamp is always less than blockTimestamp
 
         if (elapsedTime < cliffInSeconds) {
             return 0;
         }
 
         // If over vesting duration, all tokens vested
-        if (elapsedTime >= durationInSeconds) {
+        if (elapsedTime >= _durationInSeconds) {
             return token.balanceOf(address(this));
         } else {
             uint256 currentBalance = token.balanceOf(address(this));
