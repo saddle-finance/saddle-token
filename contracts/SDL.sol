@@ -35,6 +35,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
     struct Recipient {
         address to;
         uint256 amount;
+        uint256 startTimestamp;
         uint256 cliffPeriod;
         uint256 durationPeriod;
     }
@@ -104,6 +105,7 @@ contract SDL is ERC20Permit, Pausable, SimpleGovernance {
         vestingContract.initialize(
             address(this),
             recipient.to,
+            recipient.startTimestamp,
             recipient.cliffPeriod,
             recipient.durationPeriod
         );

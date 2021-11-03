@@ -1,4 +1,8 @@
-import { ZERO_ADDRESS, setTimestamp } from "./testUtils"
+import {
+  ZERO_ADDRESS,
+  setTimestamp,
+  getCurrentBlockTimestamp,
+} from "./testUtils"
 import { solidity } from "ethereum-waffle"
 import { deployments } from "hardhat"
 
@@ -72,15 +76,32 @@ describe("Vesting", () => {
   })
 
   describe("initialize", () => {
+    let startTimestamp: number
+    beforeEach(async () => {
+      startTimestamp = (await getCurrentBlockTimestamp()) - 1000
+    })
+
     it("Fails to initialize the logic contract", async () => {
       await expect(
-        vesting.initialize(dummyToken.address, beneficiaryAddress, 3600, 7200),
+        vesting.initialize(
+          dummyToken.address,
+          beneficiaryAddress,
+          startTimestamp,
+          3600,
+          7200,
+        ),
       ).to.be.revertedWith("cannot initialize logic contract")
     })
 
     it("Fails to initialize a clone with empty beneficiary", async () => {
       await expect(
-        vestingClone.initialize(dummyToken.address, ZERO_ADDRESS, 3600, 7200),
+        vestingClone.initialize(
+          dummyToken.address,
+          ZERO_ADDRESS,
+          startTimestamp,
+          3600,
+          7200,
+        ),
       ).to.be.revertedWith("beneficiary cannot be empty")
     })
 
@@ -89,6 +110,7 @@ describe("Vesting", () => {
         vestingClone.initialize(
           dummyToken.address,
           beneficiaryAddress,
+          startTimestamp,
           7201,
           7200,
         ),
@@ -99,6 +121,7 @@ describe("Vesting", () => {
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
+        startTimestamp,
         3600,
         7200,
       )
@@ -111,9 +134,11 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
+        startTimestamp,
         3600,
         7200,
       )
@@ -184,9 +209,11 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
+        startTimestamp,
         3600,
         7200,
       )
@@ -229,9 +256,11 @@ describe("Vesting", () => {
     const totalVestedAmount = BigNumber.from(10).pow(18).mul(10000)
 
     beforeEach(async () => {
+      const startTimestamp = (await getCurrentBlockTimestamp()) - 1000
       await vestingClone.initialize(
         dummyToken.address,
         beneficiaryAddress,
+        startTimestamp,
         3600,
         7200,
       )

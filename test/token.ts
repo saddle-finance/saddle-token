@@ -32,6 +32,7 @@ describe("Token", () => {
   interface Recipient {
     to: string
     amount: BigNumber
+    startTimestamp: BigNumber
     cliffPeriod: BigNumber
     durationPeriod: BigNumber
   }
@@ -48,22 +49,28 @@ describe("Token", () => {
       governanceAddress = await governance.getAddress()
 
       // Signers [10, 11, 12] are vested, [13, 14] are not vested
+      const vestingStartTimestamp = BigNumber.from(
+        await getCurrentBlockTimestamp(),
+      ).sub(1000)
       const vestingRecipients: Recipient[] = [
         {
           to: await signers[10].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
+          startTimestamp: vestingStartTimestamp,
           cliffPeriod: BigNumber.from(3600),
           durationPeriod: BigNumber.from(7200),
         },
         {
           to: await signers[11].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
+          startTimestamp: vestingStartTimestamp,
           cliffPeriod: BigNumber.from(3600),
           durationPeriod: BigNumber.from(7200),
         },
         {
           to: await signers[12].getAddress(),
           amount: BIG_NUMBER_1E18.mul(2e8),
+          startTimestamp: vestingStartTimestamp,
           cliffPeriod: BigNumber.from(3600),
           durationPeriod: BigNumber.from(7200),
         },

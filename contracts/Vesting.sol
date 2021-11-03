@@ -20,6 +20,7 @@ contract Vesting is Initializable, Context {
     event Released(uint256 amount);
     event VestingInitialized(
         address indexed beneficiary,
+        uint256 startTimestamp,
         uint256 cliff,
         uint256 duration
     );
@@ -61,10 +62,12 @@ contract Vesting is Initializable, Context {
      * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
      * @param _cliffInSeconds duration in months of the cliff in which tokens will begin to vest
      * @param _durationInSeconds duration in months of the period in which the tokens will vest
+     * @param _startTimestamp start timestamp when the cliff and vesting should start to count
      */
     function initialize(
         address _token,
         address _beneficiary,
+        uint256 _startTimestamp,
         uint256 _cliffInSeconds,
         uint256 _durationInSeconds
     ) external initializer {
@@ -72,6 +75,11 @@ contract Vesting is Initializable, Context {
         // dev: beneficiary is set to msg.sender on logic contracts during deployment
         require(beneficiary == address(0), "cannot initialize logic contract");
         require(_beneficiary != address(0), "_beneficiary cannot be empty");
+        require(_startTimestamp != 0, "startTimestamp cannot be 0");
+        require(
+            _startTimestamp <= block.timestamp,
+            "startTimestamp cannot be from the future"
+        );
         require(_durationInSeconds != 0, "duration cannot be 0");
         require(
             _cliffInSeconds <= _durationInSeconds,
@@ -80,12 +88,13 @@ contract Vesting is Initializable, Context {
 
         token = IERC20(_token);
         beneficiary = _beneficiary;
+        startTimestamp = _startTimestamp;
         durationInSeconds = _durationInSeconds;
         cliffInSeconds = _cliffInSeconds;
-        startTimestamp = block.timestamp;
 
         emit VestingInitialized(
             _beneficiary,
+            _startTimestamp,
             _cliffInSeconds,
             _durationInSeconds
         );
@@ -108,14 +117,16 @@ contract Vesting is Initializable, Context {
      */
     function vestedAmount() public view returns (uint256) {
         uint256 blockTimestamp = block.timestamp;
-        uint256 elapsedTime = blockTimestamp - startTimestamp;
+        uint256 _durationInSeconds = durationInSeconds;
+
+        uint256 elapsedTime = blockTimestamp - startTimestamp; // @dev startTimestamp is always less than blockTimestamp
 
         if (elapsedTime < cliffInSeconds) {
             return 0;
         }
 
         // If over vesting duration, all tokens vested
-        if (elapsedTime >= durationInSeconds) {
+        if (elapsedTime >= _durationInSeconds) {
             return token.balanceOf(address(this));
         } else {
             uint256 currentBalance = token.balanceOf(address(this));
@@ -126,7 +137,7 @@ contract Vesting is Initializable, Context {
             }
 
             uint256 totalBalance = currentBalance + released;
-            uint256 vested = (totalBalance * elapsedTime) / durationInSeconds;
+            uint256 vested = (totalBalance * elapsedTime) / _durationInSeconds;
             uint256 unreleased = vested - released;
 
             return unreleased;
