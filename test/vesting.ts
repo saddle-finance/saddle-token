@@ -58,6 +58,17 @@ describe("Vesting", () => {
         BigNumber.from(10).pow(18).mul(10000),
       )
 
+      await deploy("Cloner", {
+        from: deployer,
+        log: true,
+        skipIfAlreadyDeployed: true,
+      })
+      await deploy("Vesting", {
+        from: deployer,
+        log: true,
+        skipIfAlreadyDeployed: true,
+      })
+
       cloner = await ethers.getContract("Cloner")
       vesting = await ethers.getContract("Vesting")
 

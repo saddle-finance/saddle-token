@@ -87,6 +87,12 @@ describe("Token", () => {
         },
       ]
 
+      await deploy("Vesting", {
+        from: deployer,
+        log: true,
+        skipIfAlreadyDeployed: true,
+      })
+
       vesting = await ethers.getContract("Vesting")
 
       // Calculate deterministic deployment address

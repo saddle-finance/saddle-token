@@ -7,13 +7,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  if (isTestNetwork(await getChainId())) {
-    await deploy("Cloner", {
-      from: deployer,
-      log: true,
-      skipIfAlreadyDeployed: true,
-    })
-  }
+  await deploy("Vesting", {
+    from: deployer,
+    log: true,
+    skipIfAlreadyDeployed: true,
+  })
 }
 export default func
-func.tags = ["Cloner"]
+func.tags = ["Vesting"]
