@@ -10,8 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy, get, execute } = deployments
   const { deployer } = await getNamedAccounts()
 
-  // TODO: Change multisig address
-  const MULTISIG = "0x0000000000000000000000000000000000000001"
+  const MULTISIG = "0x3F8E527aF4e0c6e763e8f368AC679c44C45626aE"
 
   // Change SDL governance to multisig
   await execute(
