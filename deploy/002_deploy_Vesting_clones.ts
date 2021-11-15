@@ -1,6 +1,6 @@
 import { BIG_NUMBER_1E18, MAX_UINT256 } from "../test/testUtils"
+import { BigNumber, ethers } from "ethers"
 
-import { BigNumber } from "ethers"
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 
@@ -17,13 +17,13 @@ const getThirdRoundAllocation = function (amount: number): BigNumber {
 }
 
 const FIRST_ROUND_INVESTORS: { [address: string]: number } = {
-  "TODO 1": 400000,
+  "0x3b08AA814bEA604917418A9F0907E7fC430e742C": 400000,
   "0x987FC4FC9aba7fFbDb3E8d0F9FfED364E01DC18c": 170000,
   "0xdB7A80DdfDeB83573636B84862803bB07317194C": 150000,
   "0xCf67910ed04fB23a2ccff3A4bEC259Bb0bf3841c": 50000,
-  "TODO 2": 50000,
+  "0x23F322Fe50BD1eb7488bAbA33dA56A95Bd2f5815": 50000,
   "0x6C2a066B6CE2872BD5398347E97223C6F6F84104": 30000,
-  "TODO 3": 30000,
+  "0x83b1a48376E045D26420200345414e6b93066396": 30000,
   "0x4F20Cb7a1D567A54350a18DAcB0cc803aEBB4483": 30000,
   "0xc90eA4d8D214D548221EE3622a8BE1D61f7077A2": 30000,
   "0xB3E2B1808ab9e81F3Abfc8C9f78B1dD680Cef948": 20000,
@@ -37,21 +37,21 @@ const FIRST_ROUND_INVESTORS: { [address: string]: number } = {
   "0x231A07C825f052B895DE5FD1513CE40D18E14aF5": 20000,
   "0x973B1E385659E317Dd43B49C29E45e66c0275696": 20000,
   "0x79129d8A02d60D9E9AcF47632B11fC56DE3EcB08": 20000,
-  "TODO 5": 10000,
+  // "TODO 5": 10000,
 }
 
 const SECOND_ROUND_INVESTORS: { [address: string]: number } = {
-  "TODO 1": 1000000,
+  // "TODO 1": 1000000,
   "0xda7Dc67829F5c1Ad7eC4C6174a6Fbbc722229a40": 1000000,
   "0xA44ED7D06cbEE6F7d166A7298Ec61724C08163F5": 750000,
   "0xe5D0Ef77AED07C302634dC370537126A2CD26590": 100000,
   "0x43Bf99D656be7c354B26e63F01f18faB88714D64": 50000,
   "0x6b339824883E59676EA605260E4DdA71DcCA29Ae": 25000,
   "0x4d108e41b380AeCd04693690996192BEEe29174c": 25000,
-  "TODO 2": 25000,
+  // "TODO 2": 25000,
   "0x4e7541783a0256e0EEf6cCA2b175Da79548db269": 25000,
-  "TODO 3": 25000,
-  "TODO 4": 25000,
+  // "TODO 3": 25000,
+  "0xe016ec54349e1fdc09c86878f25760ed317a7911": 25000,
   "0x7fCAf93cc92d51c490FFF701fb2C6197497a80db": 25000,
   "0xb4d47Add34a5dF5Ce64DdC6e926A99fc1F8F817f": 25000,
   "0x92DE4fF2037f8508c8A2D8EfB61868B284c6081c": 20000,
@@ -61,14 +61,14 @@ const SECOND_ROUND_INVESTORS: { [address: string]: number } = {
 
 const THIRD_ROUND_INVESTORS: { [address: string]: number } = {
   "0x89a88bcfe0A8BB0BD240FACf5f20385Cdc48eC4C": 3000000,
-  "TODO 1": 2675625,
-  "TODO 2": 324375,
+  // "TODO 1": 2675625,
+  // "TODO 2": 324375,
   "0xFcfBF39D5211498AfD8a00C07AAD44A2a96118d0": 294138,
   "0xe2eC0bC10C1ac3510a6687481d2dFa567e340469": 255000,
   "0x806b885aCb0494925c68C279C2A1D3C03ed67FC6": 165862,
   "0xdB7A80DdfDeB83573636B84862803bB07317194C": 150000,
   "0x3631401a11ba7004d1311e24d177b05ece39b4b3": 150000,
-  "TODO 3": 83060,
+  "0xaC136EdAa6e5280e344dd3a2d463d7C5Ed93cDC5": 83060,
   "0xcA59254EF758Ddfa5aae350422Fdd816c11D9031": 75000,
   "0x8D60876891Ed33e0d40Ff677baDb9b8A9E775CC5": 50000,
   "0xd9d77Edc0650261e0b2b1F99327d538A613BF930": 50000,
@@ -77,13 +77,15 @@ const THIRD_ROUND_INVESTORS: { [address: string]: number } = {
   "0x156c2d0D9CfA744615b022229026423E24a566ee": 25000,
   "0xbB49444efe86b167d1Cc35C79A9eb39110DbD5E3": 25000,
   "0xb9136F75e4F0eFAb9869c6C1d4659E3a585E9091": 20000,
-  "TODO 4": 16940,
+  "0x44692cd1FBd67acFA3cA0c089B4f06dFae07df79": 16940,
   "0x546560eFB65988D2c94E37b59CA11629C8584f91": 10000,
   "0x84ADB7653B176A5cEeBCe0b927f83F0D3eFD89c7": 10000,
   "0x3f1f7df41cce79f4840067106184079236784ad2": 10000,
   "0x4e33D9523AB9CC36cDf923dEe0E8a7d11308595b": 10000,
   "0x31421C442c422BD16aef6ae44D3b11F404eeaBd9": 10000,
 }
+
+const MULTISIG_ADDRESS = "0x3F8E527aF4e0c6e763e8f368AC679c44C45626aE"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, getChainId } = hre
@@ -162,7 +164,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const vestingRecipients: Recipient[] = [
     // Protocol treasury
     {
-      to: "0x3F8E527aF4e0c6e763e8f368AC679c44C45626aE",
+      to: MULTISIG_ADDRESS,
       amount: BIG_NUMBER_1E18.mul(300_000_000),
       startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
       cliffPeriod: BigNumber.from(0),
@@ -244,7 +246,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     // Encode
     {
-      to: "TODO",
+      to: "0xFABEcA5418bDC3A8289EC0FA5B04edEb1D09c90f",
       amount: BIG_NUMBER_1E18.mul(2_500_000),
       startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
       cliffPeriod: BigNumber.from(0),
@@ -260,6 +262,49 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     // Investors
     ...investorRecipients,
+    // Vesting for un-exercised warrants
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getFirstRoundAllocation(10000),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getSecondRoundAllocation(1000000),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getSecondRoundAllocation(25000),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getSecondRoundAllocation(25000),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getThirdRoundAllocation(2675625),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
+    {
+      to: MULTISIG_ADDRESS,
+      amount: getThirdRoundAllocation(324375),
+      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
+      cliffPeriod: BigNumber.from(0),
+      durationPeriod: TWO_YEARS_IN_SEC,
+    },
   ]
 
   // Approve the contract to use the token for deploying the vesting contracts
