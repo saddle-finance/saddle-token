@@ -105,7 +105,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const THREE_YEARS_IN_SEC = BigNumber.from(3).mul(365).mul(24).mul(60).mul(60)
 
   // Tuesday, November 16, 2021 12:00:00 AM UTC
-  const TOKEN_LAUNCH_TIMESTAMP = BigNumber.from(1637020800)
+  // This cannot be set in the future!
+  const TOKEN_LAUNCH_TIMESTAMP = BigNumber.from(Math.floor(Date.now() / 1000))
 
   // Wednesday, July 7, 2021 12:00:00 AM UTC
   const FIRST_BATCH_TEAM_VESTING_START_TIMESTAMP = BigNumber.from(1625616000)
