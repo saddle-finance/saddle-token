@@ -24,7 +24,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // 6 months (24 weeks)
   const lmRewardsPerSecond = TOTAL_LM_REWARDS.div(6 * 4 * 7 * 24 * 3600)
 
-  // TODO: Update MiniChef reward amounts
   const batchCall = [
     await minichef.populateTransaction.setSaddlePerSecond(lmRewardsPerSecond),
     await minichef.populateTransaction.add(
