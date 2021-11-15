@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     skipIfAlreadyDeployed: true,
     args: [
       (await get("SDL")).address,
-      "0x4cead4a17e8540e1f11adb8b3b23d6a02c1ba49db95d351c3fd0535664d9d292", // TODO: update merkle root
+      "0x235d88efaae4e04494277ca85279b0550806a2b3efb124e38933a167ba4e7cec",
       1637042400, // Tuesday, November 16, 2021 6:00:00 AM
     ],
   })
