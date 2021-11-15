@@ -1,5 +1,5 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { DeployFunction } from "hardhat-deploy/types"
+import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { isTestNetwork } from "../test/testUtils"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -10,6 +10,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await execute("SDL", { from: deployer, log: true }, "addToAllowedList", [
     (await get("RetroactiveVesting")).address,
     (await get("MiniChefV2")).address,
+    // Saddle grants multisig
+    "0x87f194b4175d415E399E5a77fCfdFA66040199b6",
   ])
 }
 export default func
