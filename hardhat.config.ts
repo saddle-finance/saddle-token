@@ -27,7 +27,7 @@ let config: HardhatUserConfig = {
     arbitrum_mainnet: {
       url: "https://arb1.arbitrum.io/rpc",
       gasPrice: ethers.utils.parseUnits("2", "gwei").toNumber(),
-      deploy: ["./deploy/arbitrum/"],
+      deploy: ["./deploy/arbitrum_mainnet/"],
     },
   },
   paths: {
