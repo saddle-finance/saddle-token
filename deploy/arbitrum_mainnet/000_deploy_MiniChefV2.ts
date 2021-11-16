@@ -1,8 +1,8 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { BIG_NUMBER_1E18 } from "../../test/testUtils"
 import { DeployFunction } from "hardhat-deploy/types"
-import { BIG_NUMBER_1E18, isTestNetwork } from "../test/testUtils"
+import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { MiniChefV2 } from "../../build/typechain"
 import { ethers } from "hardhat"
-import { MiniChefV2 } from "../build/typechain"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, getChainId } = hre
