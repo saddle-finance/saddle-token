@@ -22,7 +22,6 @@ let config: HardhatUserConfig = {
     mainnet: {
       url: process.env.ALCHEMY_API,
       gasPrice: 180 * 1000000000,
-      deploy: ["./deploy/mainnet/"],
     },
   },
   paths: {
