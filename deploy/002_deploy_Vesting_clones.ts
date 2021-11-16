@@ -167,7 +167,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     })
   }
 
-  const vestingRecipients: Recipient[] = [
+  const protocolRecipients: Recipient[] = [
     // Protocol treasury
     {
       to: MULTISIG_ADDRESS,
@@ -176,6 +176,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: THREE_YEARS_IN_SEC,
     },
+  ]
+
+  const teamRecipients: Recipient[] = [
     // First batch of team grants
     {
       to: "0x27E2E09a84BaE20C2a9667594896EaF132c862b7",
@@ -235,6 +238,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: THREE_YEARS_IN_SEC,
     },
+  ]
+
+  const advisorRecipients: Recipient[] = [
     // Advisors
     {
       to: "0x779492ADFff61f10e224184201979C97Cf7B1ED4",
@@ -250,6 +256,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: THREE_YEARS_IN_SEC,
     },
+  ]
+
+  const encodeRecipients: Recipient[] = [
     // Encode
     {
       to: "0xFABEcA5418bDC3A8289EC0FA5B04edEb1D09c90f",
@@ -258,6 +267,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: THREE_YEARS_IN_SEC,
     },
+  ]
+
+  const thesisRecipients: Recipient[] = [
     // Thesis
     {
       to: "0x53AB8F38EE493d88553Ea6c2766d574E404e249B",
@@ -266,8 +278,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: THREE_YEARS_IN_SEC,
     },
-    // Investors
-    ...investorRecipients,
+  ]
+
+  const unexercisedWarrantRecipients = [
     // Vesting for un-exercised warrants
     {
       to: MULTISIG_ADDRESS,
@@ -311,6 +324,52 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       cliffPeriod: BigNumber.from(0),
       durationPeriod: TWO_YEARS_IN_SEC,
     },
+  ]
+
+  let totalAdvisorAmount = BigNumber.from(0)
+  for (const recipient of advisorRecipients) {
+    totalAdvisorAmount = totalAdvisorAmount.add(recipient.amount)
+  }
+  console.assert(
+    totalAdvisorAmount.eq(BIG_NUMBER_1E18.mul(6_000_000)),
+    `amounts did not match (got, expected): ${totalAdvisorAmount}, ${BIG_NUMBER_1E18.mul(
+      6_000_000,
+    )}`,
+  )
+
+  let totalTeamAmount = BigNumber.from(0)
+  for (const recipient of [...teamRecipients, ...thesisRecipients]) {
+    totalTeamAmount = totalTeamAmount.add(recipient.amount)
+  }
+  console.assert(
+    totalTeamAmount.eq(BIG_NUMBER_1E18.mul(259_000_000)),
+    `team amounts did not match (got, expected): ${totalTeamAmount}, ${BIG_NUMBER_1E18.mul(
+      259_000_000,
+    )}`,
+  )
+
+  let totalInvestorAmount = BigNumber.from(0)
+  for (const recipient of [
+    ...investorRecipients,
+    ...unexercisedWarrantRecipients,
+  ]) {
+    totalInvestorAmount = totalInvestorAmount.add(recipient.amount)
+  }
+  console.assert(
+    totalInvestorAmount.eq(BIG_NUMBER_1E18.mul(225_000_000)),
+    `investor amounts did not match (got, expected): ${totalInvestorAmount}, ${BIG_NUMBER_1E18.mul(
+      225_000_000,
+    )}`,
+  )
+
+  const vestingRecipients: Recipient[] = [
+    ...protocolRecipients,
+    ...teamRecipients,
+    ...advisorRecipients,
+    ...encodeRecipients,
+    ...thesisRecipients,
+    ...investorRecipients,
+    ...unexercisedWarrantRecipients,
   ]
 
   // Approve the contract to use the token for deploying the vesting contracts
