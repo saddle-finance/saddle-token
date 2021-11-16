@@ -1,4 +1,8 @@
-import { BIG_NUMBER_1E18, MAX_UINT256 } from "../test/testUtils"
+import {
+  BIG_NUMBER_1E18,
+  getCurrentBlockTimestamp,
+  MAX_UINT256,
+} from "../test/testUtils"
 import { BigNumber, ethers } from "ethers"
 
 import { DeployFunction } from "hardhat-deploy/types"
@@ -108,7 +112,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // Tuesday, November 16, 2021 12:00:00 AM UTC
   // This cannot be set in the future!
-  const TOKEN_LAUNCH_TIMESTAMP = BigNumber.from(Math.floor(Date.now() / 1000))
+  const TOKEN_LAUNCH_TIMESTAMP = BigNumber.from(
+    await getCurrentBlockTimestamp(),
+  )
 
   // Wednesday, July 7, 2021 12:00:00 AM UTC
   const FIRST_BATCH_TEAM_VESTING_START_TIMESTAMP = BigNumber.from(1625616000)

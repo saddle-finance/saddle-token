@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { DeployFunction } from "hardhat-deploy/types"
-import { BIG_NUMBER_1E18 } from "../test/testUtils"
+import { BIG_NUMBER_1E18, isTestNetwork } from "../test/testUtils"
 import { ethers } from "hardhat"
 import { MiniChefV2 } from "../build/typechain"
 
@@ -24,6 +24,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // 6 months (24 weeks)
   const lmRewardsPerSecond = TOTAL_LM_REWARDS.div(6 * 4 * 7 * 24 * 3600)
 
+  const chainId = await getChainId()
+
   const batchCall = [
     await minichef.populateTransaction.setSaddlePerSecond(lmRewardsPerSecond),
     await minichef.populateTransaction.add(
@@ -33,22 +35,30 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ),
     await minichef.populateTransaction.add(
       0,
-      "0xc9da65931abf0ed1b74ce5ad8c041c4220940368", // alETH
+      isTestNetwork(chainId)
+        ? "0xAe367415f4BDe0aDEE3e59C35221d259f517413E"
+        : "0xc9da65931abf0ed1b74ce5ad8c041c4220940368", // alETH
       "0x0000000000000000000000000000000000000000",
     ),
     await minichef.populateTransaction.add(
       0,
-      "0xd48cf4d7fb0824cc8bae055df3092584d0a1726a", // d4
+      isTestNetwork(chainId)
+        ? "0x2d2c18F63D2144161B38844dCd529124Fbb93cA2"
+        : "0xd48cf4d7fb0824cc8bae055df3092584d0a1726a", // d4
       "0x0000000000000000000000000000000000000000",
     ),
     await minichef.populateTransaction.add(
       0,
-      "0x5f86558387293b6009d7896a61fcc86c17808d62", // USD v2
+      isTestNetwork(chainId)
+        ? "0xC863F1F636fddce400E7515eCBDAbbEc4d1E0390"
+        : "0x5f86558387293b6009d7896a61fcc86c17808d62", // USD v2
       "0x0000000000000000000000000000000000000000",
     ),
     await minichef.populateTransaction.add(
       0,
-      "0xf32e91464ca18fc156ab97a697d6f8ae66cd21a3", // BTC v2
+      isTestNetwork(chainId)
+        ? "0xbBc1b70e4e04486570bfB621194d4f901a906E8F"
+        : "0xf32e91464ca18fc156ab97a697d6f8ae66cd21a3", // BTC v2
       "0x0000000000000000000000000000000000000000",
     ),
   ]
