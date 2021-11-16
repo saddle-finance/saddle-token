@@ -10,6 +10,7 @@ import "hardhat-spdx-license-identifier"
 
 import { HardhatUserConfig } from "hardhat/config"
 import dotenv from "dotenv"
+import { ethers } from "ethers"
 
 dotenv.config()
 
@@ -22,6 +23,11 @@ let config: HardhatUserConfig = {
     mainnet: {
       url: process.env.ALCHEMY_API,
       gasPrice: 180 * 1000000000,
+    },
+    arbitrum_mainnet: {
+      url: "https://arb1.arbitrum.io/rpc",
+      gasPrice: ethers.utils.parseUnits("2", "gwei").toNumber(),
+      deploy: ["./deploy/arbitrum/"],
     },
   },
   paths: {
