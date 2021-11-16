@@ -94,6 +94,10 @@ if (process.env.ACCOUNT_PRIVATE_KEYS) {
       ...config.networks?.mainnet,
       accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS),
     },
+    arbitrum_mainnet: {
+      ...config.networks?.arbitrum_mainnet,
+      accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS),
+    },
   }
 }
 
