@@ -13,11 +13,16 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-const config: HardhatUserConfig = {
+let config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
       hardfork: process.env.CODE_COVERAGE ? "berlin" : "london",
+    },
+    mainnet: {
+      url: process.env.ALCHEMY_API,
+      gasPrice: 180 * 1000000000,
+      deploy: ["./deploy/mainnet/"],
     },
   },
   paths: {
@@ -71,6 +76,20 @@ const config: HardhatUserConfig = {
     overwrite: false,
     runOnCompile: true,
   },
+}
+
+if (process.env.ETHERSCAN_API) {
+  config = { ...config, etherscan: { apiKey: process.env.ETHERSCAN_API } }
+}
+
+if (process.env.ACCOUNT_PRIVATE_KEYS) {
+  config.networks = {
+    ...config.networks,
+    mainnet: {
+      ...config.networks?.mainnet,
+      accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS),
+    },
+  }
 }
 
 export default config
