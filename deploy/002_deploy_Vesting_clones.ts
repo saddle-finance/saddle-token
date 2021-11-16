@@ -1,7 +1,7 @@
 import {
   BIG_NUMBER_1E18,
-  getCurrentBlockTimestamp,
   MAX_UINT256,
+  getCurrentBlockTimestamp,
 } from "../test/testUtils"
 import { BigNumber, ethers } from "ethers"
 
@@ -45,7 +45,7 @@ const FIRST_ROUND_INVESTORS: { [address: string]: number } = {
 }
 
 const SECOND_ROUND_INVESTORS: { [address: string]: number } = {
-  // "TODO 1": 1000000,
+  "0x74c5E6Dc988989D3025292C94d36B9e0ABBcf3d0": 1000000,
   "0xda7Dc67829F5c1Ad7eC4C6174a6Fbbc722229a40": 1000000,
   "0xA44ED7D06cbEE6F7d166A7298Ec61724C08163F5": 750000,
   "0xe5D0Ef77AED07C302634dC370537126A2CD26590": 100000,
@@ -65,8 +65,8 @@ const SECOND_ROUND_INVESTORS: { [address: string]: number } = {
 
 const THIRD_ROUND_INVESTORS: { [address: string]: number } = {
   "0x89a88bcfe0A8BB0BD240FACf5f20385Cdc48eC4C": 3000000,
-  // "TODO 1": 2675625,
-  // "TODO 2": 324375,
+  "0xbf6b82232Ab643ffb85578868B74919fE30E26e2": 2675625,
+  "0x72E5f354645e8212D3Fa9B80717E6c31887eAa7F": 324375,
   "0xFcfBF39D5211498AfD8a00C07AAD44A2a96118d0": 294138,
   "0xe2eC0bC10C1ac3510a6687481d2dFa567e340469": 255000,
   "0x806b885aCb0494925c68C279C2A1D3C03ed67FC6": 165862,
@@ -291,13 +291,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     {
       to: MULTISIG_ADDRESS,
-      amount: getSecondRoundAllocation(1000000),
-      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
-      cliffPeriod: BigNumber.from(0),
-      durationPeriod: TWO_YEARS_IN_SEC,
-    },
-    {
-      to: MULTISIG_ADDRESS,
       amount: getSecondRoundAllocation(25000),
       startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
       cliffPeriod: BigNumber.from(0),
@@ -306,20 +299,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     {
       to: MULTISIG_ADDRESS,
       amount: getSecondRoundAllocation(25000),
-      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
-      cliffPeriod: BigNumber.from(0),
-      durationPeriod: TWO_YEARS_IN_SEC,
-    },
-    {
-      to: MULTISIG_ADDRESS,
-      amount: getThirdRoundAllocation(2675625),
-      startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
-      cliffPeriod: BigNumber.from(0),
-      durationPeriod: TWO_YEARS_IN_SEC,
-    },
-    {
-      to: MULTISIG_ADDRESS,
-      amount: getThirdRoundAllocation(324375),
       startTimestamp: TOKEN_LAUNCH_TIMESTAMP,
       cliffPeriod: BigNumber.from(0),
       durationPeriod: TWO_YEARS_IN_SEC,
